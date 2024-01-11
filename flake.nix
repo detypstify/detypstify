@@ -43,6 +43,7 @@
                 cargo-expand
                 wasm-pack
                 corepack
+                python3
               ] ++
               pkgs.lib.optionals stdenv.isDarwin [
                 darwin.apple_sdk.frameworks.Security
