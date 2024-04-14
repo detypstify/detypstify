@@ -36,6 +36,8 @@
             RUST_SRC_PATH = pkgs.rustPlatform.rustLibSrc;
             buildInputs =
               with pkgs; [
+                typst
+                pandoc
                 wasm-bindgen-cli
                 fenixStable
                 fenix.packages.${system}.rust-analyzer
