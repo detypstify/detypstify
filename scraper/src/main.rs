@@ -1,6 +1,10 @@
-use std::io::{BufRead, Write};
+use std::{fs::File, io::{BufRead, Read, Write}, process::Stdio};
 
 use regex::{Captures, Regex};
+pub const OUTFILE: &str = "OUT/out";
+pub const FILE_TO_READ: &str = "../../dataset/im2latex_train.csv";
+pub const OUT_DIR: &str = "OUT";
+pub const IMAGE_OUT_DIR: &str = "OUT/images/";
 
 // performs processing
 // (1) s/\cal/\mathcal
@@ -12,6 +16,22 @@ fn process_line(s: String) -> Option<String> {
         .and_then(process_vspace)
         .and_then(process_hspace)
         .and_then(process_bf)
+        .and_then(process_text_mods)
+        .and_then(process_partial)
+        .and_then(nuke_trailing)
+        .and_then(process_small_space)
+        .and_then(process_weird_characters)
+}
+
+fn process_small_space(s: String) -> Option<String> {
+    Some(s.replace(r"\b ", r"\! "))
+
+}
+
+fn process_weird_characters(s: String) -> Option<String> {
+    // \L is a weird L. Replace it with L
+    Some(s.replace(r"\L ", r"L ").replace(r"\l ", r"l "))
+
 }
 
 fn process_mathcal(s: String) -> Option<String> {
@@ -19,22 +39,42 @@ fn process_mathcal(s: String) -> Option<String> {
 }
 
 fn process_sp(s: String) -> Option<String> {
-    Some(s.replace(r"\sp ", r"^ "))
+    Some(s.replace(r"\sp ", r"^ ").replace(r"\sb ", r"_"))
 }
 
 fn process_bf(s: String) -> Option<String> {
-    Some(s.replace(r"\bf", r"\mathbf"))
+    Some(s.replace(r"\bf", r"\mathbf").replace(r"\boldmath", r"\mathbf").replace(r"\it", r"\mathit").replace(r"\tt", r"\texttt").replace(r"\sf", r"").replace(r"\i ", r"i "))
+}
+
+fn process_partial(s: String) -> Option<String> {
+    Some(s.replace(r"\d ", r"\partial "))
+}
+
+// pandoc doesn't support vspace. Trash result
+fn process_text_mods(s: String) -> Option<String> {
+    if s.contains(r"\small") || s.contains(r"\tiny") || s.contains(r"\c ") || s.contains(r"\footnotesize") || s.contains(r"\scriptsize") || s.contains(r"\Bigl") || s.contains(r"\Bigr") || s.contains(r"\hline") || s.contains(r"\raisebox") || s.contains(r"\vphantom") || s.contains(r"\textup") || s.contains(r"`") || s.contains(r"\mit ") || s.contains(r"\do ") || s.contains(r"\em ") || s.contains(r"\atop") || s.contains(r"\large ") || s.contains(r"\label") || s.contains(r"\raise "){
+        None
+    } else {
+        Some(s)
+    }
+}
+
+fn nuke_trailing(mut s: String) -> Option<String> {
+    if s.ends_with('\\') {
+        s.pop();
+    }
+    Some(s)
 }
 
 fn process_table(s: String) -> Option<String> {
-    let regex = Regex::new(r"\\begin\{array\}\s+\{[\scl]*\}").unwrap();
+    let regex = Regex::new(r"\\begin\{array\}\s+\{[\sclr]*\}").unwrap();
     let result = regex.replace_all(&s, |caps: &Captures| caps[0].replace(" ", ""));
     Some(result.to_string())
 }
 
 // pandoc doesn't support vspace. Trash result
 fn process_vspace(s: String) -> Option<String> {
-    if s.contains(r"\vspace") {
+    if s.contains(r"\vspace") || s.contains(r"\thinspace") {
         None
     } else {
         Some(s)
@@ -46,12 +86,47 @@ fn process_vspace(s: String) -> Option<String> {
     // result.to_string()
 }
 
+// hspace pandoc doesn't support negative
 fn process_hspace(s: String) -> Option<String> {
+    let negative_hspace_regex = Regex::new(r"\\hspace\s*\{\s*[-~]").unwrap();
+    if negative_hspace_regex.is_match(&s) {
+        return None;
+    }
+    let negative_hspace_regex = Regex::new(r"\\hspace\s*\{[\s0-9]*\.").unwrap();
+    if negative_hspace_regex.is_match(&s) {
+        return None;
+    }
+
+
+
+
     let regex = Regex::new(r"(\\hspace\s*)\{([0-9a-z\s]*)\}").unwrap();
     let result = regex.replace_all(&s, |caps: &Captures| {
-        format!("{}{{ {:} }}", &caps[1], caps[2].replace(" ", ""))
-    });
-    Some(result.to_string())
+        format!("{} {{ {:} }}", &caps[1], caps[2].replace(" ", ""))
+    }).to_string();
+
+    let has_hspace_ex_regex = Regex::new(r"\\hspace\s*\{.*ex.*\}").unwrap();
+    if has_hspace_ex_regex.is_match(&result){
+        return None;
+    }
+
+    let regex_2 = Regex::new(r"\\hspace\s*\{ ([0-9][0-9]+)mm \}").unwrap();
+    let result_2 = regex_2.replace_all(&result, |caps: &regex::Captures| {
+        // Capture the digits and convert to an integer
+        let value: i32 = caps[1].parse().unwrap();
+        // Multiply by 10 to convert from mm to cm
+        let converted_value = value * 10;
+        // Replace 'mm' with 'cm' and insert the new value
+        format!("\\hspace {{{}cm}}", converted_value)
+    }).to_string();
+
+    let regex_3 = Regex::new(r"\\hspace\s*\{ ([\s\.0-9]*)mm \}").unwrap();
+    let regex_4 = Regex::new(r"\\hspace\s*\*\s*\{ ").unwrap();
+    if regex_3.is_match(&result_2) || regex_4.is_match(&result_2) {
+        return None;
+    }
+
+    Some(result_2)
 }
 
 // returns: (expr, filename)
@@ -82,15 +157,13 @@ fn split_to_pieces(s: &str) -> (String, String) {
 }
 
 fn main() {
-    // create new out directory containing file `OUT`
-    let out_dir = "out";
-
     // create the directory
-    std::fs::create_dir_all(out_dir).unwrap();
+    std::fs::create_dir_all(OUT_DIR).unwrap();
+    // create child directory
+    std::fs::create_dir_all(IMAGE_OUT_DIR).unwrap();
 
     // remove the file if it already exists
-    let out_file_path = format!("{}/OUT", out_dir);
-    if let Err(e) = std::fs::remove_file(&out_file_path) {
+    if let Err(e) = std::fs::remove_file(&OUTFILE) {
         if e.kind() != std::io::ErrorKind::NotFound {
             // Handle the error if it's not "file not found."
             panic!("Failed to remove file: {:?}", e);
@@ -101,34 +174,36 @@ fn main() {
     let mut out_file = std::fs::OpenOptions::new()
         .write(true)
         .create(true)
-        .open(&out_file_path)
+        .open(&OUTFILE)
         .unwrap();
 
-    let their_file = std::fs::File::open("../../dataset/im2latex_train.csv").unwrap();
+    let their_file = std::fs::File::open(FILE_TO_READ).unwrap();
+    // let out_file = File::create(FILE_TO_READ).unwrap();
+    // let mut writer = BufWriter::new(file);
     let mut success_idx = 0;
+    let mut success = 0;
+    let mut fail_parse = 0;
+    let mut fail_with_parse = 0;
 
     // iterate through their_file line by line
     for (idx, line_wrap) in std::io::BufReader::new(their_file).lines().enumerate() {
-        // if idx >= 2000 {
-        //     break;
-        // }
         // get the line
         let Ok(line) = line_wrap else {
-            println!("ERERRROR");
+            println!("ERROR READING LINE");
             continue;
         };
         let (expr, filename) = split_to_pieces(&line);
+        // println!("proccessing {filename}");
         let Some(processed_expr) = process_line(expr.clone()) else {
-            println!("skipped {expr}");
+            println!("skipped {expr} for file {filename}");
+            fail_parse += 1;
             continue;
         };
+        // println!("expression: {processed_expr}");
 
         let line = format!("${}$", processed_expr);
 
-        // write `$` to out_file
-        // write!(&out_file, "$").unwrap();
-        // pandoc -f latex -t typst -o OUTPUT_FILE.typ -
-
+        // println!("RUNNING PROCESS");
         match std::process::Command::new("pandoc")
             .arg("-f")
             .arg("latex")
@@ -136,8 +211,9 @@ fn main() {
             .arg("typst")
             .arg("--fail-if-warnings=true")
             .arg("-")
-            .stdin(std::process::Stdio::piped())
-            .stdout(out_file.try_clone().unwrap()) // Clone the file handle for each iteration
+            .stdin(Stdio::piped())
+            // .stdout(out_file.try_clone().unwrap()) // Clone the file handle for each iteration
+            .stdout(Stdio::piped()) // Clone the file handle for each iteration
             .spawn()
         {
             Ok(mut pandoc_cmd) => {
@@ -153,40 +229,73 @@ fn main() {
                         // write!(&out_file, "$").unwrap();
 
                         // write newline to outfile
-                        writeln!(&mut out_file).unwrap();
+                        // writeln!(&mut out_file).unwrap();
 
                         // Wait for the process to finish
                         match pandoc_cmd.wait() {
                             Ok(o) => {
                                 if o.success() {
+                                    let mut output = String::new();
+                                    if let Some(mut stdout) = pandoc_cmd.stdout.take() {
+                                        stdout.read_to_string(&mut output).unwrap();
+                                    }
                                     success_idx += 1;
-                                    println!("SUCESS:{:?}", success_idx);
+                                    success += 1;
+                                    let file_name_new = filename.replace(r".png", r".svg");
+                                    match std::process::Command::new("typst")
+                                        .arg("compile")
+                                        .arg("-")
+                                        .arg(format!("{}/{}", IMAGE_OUT_DIR, file_name_new))
+                                        .stdin(Stdio::piped())
+                                        .spawn() {
+                                        Ok(mut typst_cmd) => {
+                                            match typst_cmd.stdin.as_mut().unwrap().write_all(output.as_bytes()) {
+                                                Ok(_) => {
+                                                    println!("SUCCESS:{:?}", success_idx);
+                                                    if let Err(e) = writeln!(&mut out_file, "{output},{file_name_new}") {
+                                                        println!("ERR writing to file {filename}: {e}");
+                                                    };
+                                                },
+                                                Err(e) => {
+                                                    println!("error {e} running typst compile on {file_name_new}");
+
+                                                },
+                                            }
+
+                                        },
+                                        Err(e) => {
+                                            println!("error {e} running typst compile on {file_name_new}");
+
+                                        },
+                                    }
                                 } else {
-                                    println!("ERROR");
-                                    return;
+                                    fail_with_parse += 1;
+                                    // println!("ERROR");
                                 }
 
                                 continue;
                             }
-                            Err(e) => {
+                            Err(_e) => {
+                                fail_with_parse += 1;
                                 // println!("err {e}");
-                                println!("ERROR");
-                                continue;
+                                // println!("ERROR");
                             }
                         }
                     }
                     Err(e) => {
-                        println!("ERROR");
+                        fail_with_parse += 1;
+                        // println!("ERROR");
                         // println!("err {e}");
-                        continue;
                     }
                 }
             }
             Err(e) => {
-                println!("ERROR");
+                fail_with_parse += 1;
+                // println!("ERROR");
                 // println!("err {e}");
                 continue;
             }
         }
     }
+    println!("success: {success}, fail_parse: {fail_parse}, fail_with_parse: {fail_with_parse}");
 }
