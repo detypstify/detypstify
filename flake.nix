@@ -37,105 +37,25 @@
             nixified-ai-new.overlays.python-torchCuda
           ];
         };
-        pkgs_old = import nixified-ai.inputs.nixpkgs {
-          inherit system;
-          # overlays = [() ];
-        };
-        pkgs_new = import nixpkgs {
+        pkgs_mvp = import nixpkgs {
           inherit system;
           config = {
-            # cudaSupport = true;
-          #   rocmSupport = true;
+            allowUnfree = true;
           };
-          overlays = [
-          # (
-          #   self: super: {
-          #     python311 = super.python311.override {
-          #       packageOverrides = python-self: python-super: {
-          #         torch-bin = python-super.torch-bin.overrideAttrs (oldAttrs: {
-          #             src = pkgs_new.fetchurl { name = "torch-2.0.1+rocm5.7-cp311-cp311-linux_x86_64.whl";
-          #             url = "https://repo.radeon.com/rocm/manylinux/rocm-rel-5.7/torch-2.0.1%2Brocm5.7-cp311-cp311-linux_x86_64.whl";
-          #             hash = "sha256-h4MIjra94HdalAaMo4/mVsK1a6R/cluEsFa0ISAYPY4=";
-          #
-          #             };
-          #             postFixup =
-          #             ''
-          #               addAutoPatchelfSearchPath "$out/${python-super.python.sitePackages}/torch/lib"
-          #               addAutoPatchelfSearchPath "${pkgs_new.rocmPackages_5.rocblas}/lib"
-          #               pushd $out/${python-super.python.sitePackages}/torch/lib || exit 1
-          #                 for LIBNVRTC in ./libnvrtc*
-          #                 do
-          #                   case "$LIBNVRTC" in
-          #                     ./libnvrtc-builtins*) true;;
-          #                     ./libnvrtc*) patchelf "$LIBNVRTC" --add-needed libnvrtc-builtins* ;;
-          #                   esac
-          #                 done
-          #               popd || exit 1
-          #             '';
-          #         });
-          #       };
-          #     };
-          #   }
-          # )
-          ];
         };
         in {
+          defaultPackage = self.devShell.${system};
           devShells = {
-            oldaf = pkgs_old.mkShell {
-              "HSA_OVERRIDE_GFX_VERSION" = "10.3.0";
-              LD_LIBRARY_PATH = "${pkgs_old.xorg.libX11}/lib:${pkgs_old.xorg.libXcursor}/lib:${pkgs_old.xorg.libXrandr}/lib:${pkgs_old.xorg.libXi}/lib:${pkgs_old.libxkbcommon}/lib:${pkgs_old.vulkan-loader}/lib:${pkgs_old.stdenv.cc.cc.lib}/lib:${pkgs_old.libGL}/lib:${pkgs_old.glib.out}/lib:${pkgs_old.rocblas}/lib:${pkgs_old.hip}/lib";
-              buildInputs = with pkgs_old; [
-                nixified-ai.packages.${system}.numpy
-                nixified-ai.packages.${system}.pip
-                nixified-ai.packages.${system}.python
-                nixified-ai.packages.${system}.torch
-                # nixified-ai.packages.${system}.jiwer
-                nixified-ai.packages.${system}.transformers
-                nixified-ai.packages.${system}.datasets
-                nixified-ai.packages.${system}.scikit-learn
-                hip
-
-                libdrm
+            mvp = pkgs_mvp.mkShell {
+              buildInputs = with pkgs; [
                 ninja
                 pkg-config
-                openssl.dev
-                openssl
+                (python311.withPackages (ps: with ps; [ (torch.override { cudaSupport =  true; } /* .override { cudaSupport = true; } */ ) torchvision numpy pip python scikit-learn datasets transformers jiwer jupyter ipywidgets ] ))
               ];
-            };
-            newaf = pkgs_new.mkShell {
-              "HSA_OVERRIDE_GFX_VERSION" = "10.3.0";
 
-              LD_LIBRARY_PATH = "${pkgs_new.xorg.libX11}/lib:${pkgs_new.xorg.libXcursor}/lib:${pkgs_new.xorg.libXrandr}/lib:${pkgs_new.xorg.libXi}/lib:${pkgs_new.libxkbcommon}/lib:${pkgs_new.vulkan-loader}/lib:${pkgs_new.stdenv.cc.cc.lib}/lib:${pkgs_new.libGL}/lib:${pkgs_new.glib.out}/lib:${pkgs_new.rocmPackages_5.rocblas}/lib:${pkgs_new.rocmPackages_5.hip-common}/lib:${pkgs_new.rocmPackages_5.migraphx}/lib:${pkgs_new.rocmPackages_5.miopen}/lib:${pkgs_new.rocmPackages_5.hipfft}/lib:${pkgs_new.rocmPackages_5.miopen-hip}/lib:${pkgs_new.rocmPackages_5.roctracer}/lib:${pkgs_new.rocmPackages_5.clr}/lib:${pkgs_new.rocmPackages_5.clr}/hip/lib";
-              buildInputs = with pkgs_new; [
-                rocmPackages.rocminfo
-                rocmPackages.rocm-core
-                # python310Packages.numpy
-                python311Packages.pip
-                python311Packages.python
-                python311Packages.torch-bin
-
-                # python311Packages.torch-bin.overrideAttrs (prev: {
-
-                # })
-
-                # python310Packages.torchWithRocm
-                # python310Packages.torchvision
-                # python310Packages.pandas
-                # python310Packages.jiwer
-                # python310Packages.transformers
-                # python310Packages.datasets
-                # python310Packages.scikit-learn
-
-                libdrm
-                ninja
-                pkg-config
-                openssl.dev
-                openssl
-              ];
 
             };
           };
-          defaultPackage = self.devShell.${system};
           devShell = pkgs.mkShell.override { } {
             shellHook = ''
               export CARGO_TARGET_DIR="$(git rev-parse --show-toplevel)/target_ditrs/nix_rustc";
@@ -170,7 +90,7 @@
                 pkg-config
                 openssl.dev
                 openssl
-                (python311.withPackages (ps: with ps; [ (torch /* .override { cudaSupport = true; } */ ) torchvision numpy pip python scikit-learn datasets transformers]))
+                (python311.withPackages (ps: with ps; [ (torch /* .override { cudaSupport = true; } */ ) torchvision numpy pip python scikit-learn datasets transformers jiwer jupyter ipywidgets ] ))
                 # A Python interpreter including the 'venv' module is required to bootstrap
                 # the environment.
                 # python310Packages.python
