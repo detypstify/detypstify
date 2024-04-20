@@ -53,7 +53,6 @@ def read_in_dataset():
                 formula += "\n" + lines[j].strip()
                 j += 1
             i = j
-            # print(lines[j].strip().split(','))
             image = lines[j].strip().split(',')[1]
             image_png = image[0:-3] + 'png'
             # check if the file exists on the filesystem
@@ -66,7 +65,6 @@ def read_in_dataset():
     return df
 
 df = read_in_dataset()
-print(df.size)
 train_df, test_df = train_test_split(df, test_size = 0.2)
 train_df.reset_index(drop=True, inplace=True)
 test_df.reset_index(drop=True, inplace=True)
@@ -75,20 +73,20 @@ processor = TrOCRProcessor.from_pretrained("microsoft/trocr-base-printed")
 train_dataset = TypstDataSet(df = train_df, processor = processor)
 eval_dataset = TypstDataSet(df = test_df, processor = processor)
 encoding = train_dataset[0]
-for k,v in encoding.items():
-    print(k, v.shape)
+# for k,v in encoding.items():
+#     print(k, v.shape)
 
 train_dataloader = DataLoader(train_dataset, batch_size=4, shuffle=True)
 eval_dataloader = DataLoader(eval_dataset, batch_size = 4)
 
-print(
-        "CUDA AVAILABILITY: " + str(torch.cuda.is_available())
-        )
-
-print(
-        "CUDA VERSION: " + str(torch.version.cuda)
-        )
-
+# print(
+#         "CUDA AVAILABILITY: " + str(torch.cuda.is_available())
+#         )
+#
+# print(
+#         "CUDA VERSION: " + str(torch.version.cuda)
+#         )
+#
 device = torch.device("cuda")
 model = VisionEncoderDecoderModel.from_pretrained("microsoft/trocr-base-stage1")
 model.to(device)
@@ -116,31 +114,22 @@ def compute_cer(pred_ids, label_ids, p, metric):
 optimizer = AdamW(model.parameters(), lr=5e-5)
 
 for epoch in range(10):  # loop over the dataset multiple times
-    print("EPOCH: " + str(epoch))
+    # print("EPOCH: " + str(epoch))
     # train
     model.train()
-    print("trained")
     train_loss = 0.0
     for batch in tqdm(train_dataloader):
-        print("doing batch")
         # get the inputs
         for k,v in batch.items():
-            print("sending batch to device")
             batch[k] = v.to(device)
 
        # forward + backward + optimize
-        print("tf is this doing")
         outputs = model(**batch)
-        print("umm")
         loss = outputs.loss
-        print("going backward")
         loss.backward()
-        print("optimizer")
         optimizer.step()
-        print("grad")
         optimizer.zero_grad()
 
-        print("traloss")
         train_loss += loss.item()
 
     print(f"Loss after epoch {epoch}:", train_loss/len(train_dataloader))
