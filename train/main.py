@@ -56,7 +56,8 @@ def read_in_dataset():
             image = lines[j].strip().split(',')[1]
             image_png = image[0:-3] + 'png'
             # check if the file exists on the filesystem
-            if os.path.exists(image_path_prefix + image):
+            print(image_path_prefix + image_png)
+            if os.path.exists(image_path_prefix + image_png):
                 formulas.append(formula)
                 image_paths.append(image_path_prefix + image_png)
             i = i + 1
@@ -65,6 +66,7 @@ def read_in_dataset():
     return df
 
 df = read_in_dataset()
+print(f"size: {df.size}")
 train_df, test_df = train_test_split(df, test_size = 0.2)
 train_df.reset_index(drop=True, inplace=True)
 test_df.reset_index(drop=True, inplace=True)
