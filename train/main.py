@@ -32,11 +32,6 @@ class TypstDataSet(Dataset):
         encoding = {"pixel_values" : pixel_values.squeeze(), "labels" : torch.tensor(labels)}
         return encoding
 
-
-
-#
-
-
 def read_in_dataset():
     formulas = []
     image_paths = []
@@ -57,6 +52,7 @@ def read_in_dataset():
             image_png = image[0:-3] + 'png'
             # check if the file exists on the filesystem
             if os.path.exists(image_path_prefix + image):
+                print(image_png)
                 formulas.append(formula)
                 image_paths.append(image_path_prefix + image_png)
             i = i + 1
@@ -79,14 +75,14 @@ encoding = train_dataset[0]
 train_dataloader = DataLoader(train_dataset, batch_size=4, shuffle=True)
 eval_dataloader = DataLoader(eval_dataset, batch_size = 4)
 
-# print(
-#         "CUDA AVAILABILITY: " + str(torch.cuda.is_available())
-#         )
-#
-# print(
-#         "CUDA VERSION: " + str(torch.version.cuda)
-#         )
-#
+print(
+        "CUDA AVAILABILITY: " + str(torch.cuda.is_available())
+        )
+
+print(
+        "CUDA VERSION: " + str(torch.version.cuda)
+        )
+
 device = torch.device("cuda")
 model = VisionEncoderDecoderModel.from_pretrained("microsoft/trocr-base-stage1")
 model.to(device)
@@ -114,7 +110,7 @@ def compute_cer(pred_ids, label_ids, p, metric):
 optimizer = AdamW(model.parameters(), lr=5e-5)
 
 for epoch in range(10):  # loop over the dataset multiple times
-    # print("EPOCH: " + str(epoch))
+    print("EPOCH: " + str(epoch))
     # train
     model.train()
     train_loss = 0.0
@@ -126,7 +122,9 @@ for epoch in range(10):  # loop over the dataset multiple times
        # forward + backward + optimize
         outputs = model(**batch)
         loss = outputs.loss
+        print("BKCWARD")
         loss.backward()
+        print("DONE")
         optimizer.step()
         optimizer.zero_grad()
 
@@ -148,9 +146,4 @@ for epoch in range(10):  # loop over the dataset multiple times
     print("Validation CER:", valid_cer / len(eval_dataloader))
 
 model.save_pretrained(".")
-
-
-
-
-
 
