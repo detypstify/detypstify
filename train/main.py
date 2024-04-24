@@ -11,9 +11,34 @@ from torch.utils.data import DataLoader
 from datasets import load_metric
 from torch.optim import AdamW
 from tqdm.notebook import tqdm
+import signal
+
+def signal_handler(sig, frame):
+    print("Ctrl-C pressed. Program paused. Press 'c' to continue and q to quit")
+    signal.signal(signal.SIGINT, signal.SIG_IGN)  # Ignore Ctrl-C during pause
+    while True:
+        user_input = input()
+        if user_input.lower() == 'c':
+            print("Resuming program...")
+            signal.signal(signal.SIGINT, signal_handler)  # Restore Ctrl-C handler
+            break
+        elif user_input == 'q':
+            print("Quitting program...")
+            exit()
+
+signal.signal(signal.SIGINT, signal_handler)  # Register Ctrl-C handler
+
+
+print(
+        "CUDA AVAILABILITY: " + str(torch.cuda.is_available())
+        )
+
+print(
+        "CUDA VERSION: " + str(torch.version.cuda)
+        )
 
 class TypstDataSet(Dataset):
-    def __init__(self, df, processor, max_target_length = 128):
+    def __init__(self, df, processor, max_target_length = 2048):
         self.df = df
         self.processor = processor
         self.max_target_length = max_target_length
@@ -35,8 +60,8 @@ class TypstDataSet(Dataset):
 def read_in_dataset():
     formulas = []
     image_paths = []
-    image_path_prefix = "../scraper/OUT/images/"
-    path = "../scraper/OUT/out"
+    image_path_prefix = "/shared/typst-detexify/scraper/OUT/images/"
+    path = "/shared/typst-detexify/scraper/OUT/out"
     with open(path, 'r') as file:
         lines = file.readlines()
         i = 0
@@ -51,16 +76,21 @@ def read_in_dataset():
             image = lines[j].strip().split(',')[1]
             image_png = image[0:-3] + 'png'
             # check if the file exists on the filesystem
-            if os.path.exists(image_path_prefix + image):
-                print(image_png)
+            if os.path.exists(image_path_prefix + image_png):
+                # print("file: f{image_path_prefix + image}")
+                # print(image_png)
                 formulas.append(formula)
                 image_paths.append(image_path_prefix + image_png)
             i = i + 1
 
     df = pd.DataFrame({'text': formulas, 'file_name': image_paths})
+    print(f"SIZXE {df.size}")
+    print(f"FORMUALS {len(formulas)}")
+    print(f"IMPGAHTS {len(image_paths)}")
     return df
 
 df = read_in_dataset()
+print(f"size: {df.size}")
 train_df, test_df = train_test_split(df, test_size = 0.2)
 train_df.reset_index(drop=True, inplace=True)
 test_df.reset_index(drop=True, inplace=True)
@@ -72,16 +102,8 @@ encoding = train_dataset[0]
 # for k,v in encoding.items():
 #     print(k, v.shape)
 
-train_dataloader = DataLoader(train_dataset, batch_size=4, shuffle=True)
-eval_dataloader = DataLoader(eval_dataset, batch_size = 4)
-
-print(
-        "CUDA AVAILABILITY: " + str(torch.cuda.is_available())
-        )
-
-print(
-        "CUDA VERSION: " + str(torch.version.cuda)
-        )
+train_dataloader = DataLoader(train_dataset, batch_size=2, shuffle=True)
+eval_dataloader = DataLoader(eval_dataset, batch_size=2)
 
 device = torch.device("cuda")
 model = VisionEncoderDecoderModel.from_pretrained("microsoft/trocr-base-stage1")
@@ -114,7 +136,11 @@ for epoch in range(10):  # loop over the dataset multiple times
     # train
     model.train()
     train_loss = 0.0
+    # len = len(tqdm(train_dataloader))
+    batch_idx = 0
     for batch in tqdm(train_dataloader):
+        batch_idx += 1
+        print(f"EPOCH : {str(epoch)}, batch {str(batch_idx)}")
         # get the inputs
         for k,v in batch.items():
             batch[k] = v.to(device)
@@ -144,6 +170,7 @@ for epoch in range(10):  # loop over the dataset multiple times
             valid_cer += cer
 
     print("Validation CER:", valid_cer / len(eval_dataloader))
+    model.save_pretrained(f"./{epoch + 1}")
 
 model.save_pretrained(".")
 

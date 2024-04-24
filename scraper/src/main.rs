@@ -1,10 +1,16 @@
 use std::{fs::File, io::{BufRead, Read, Write}, process::Stdio};
 
+use rayon::iter::ParallelIterator;
 use regex::{Captures, Regex};
 pub const OUTFILE: &str = "OUT/out";
-pub const FILE_TO_READ: &str = "../../dataset/im2latex_train.csv";
+pub const FILE_TO_READ: &str = "/home/jrestivo/Data/ml_final_project/PRINTED_TEX_230k/final_png_formulas.txt";
 pub const OUT_DIR: &str = "OUT";
 pub const IMAGE_OUT_DIR: &str = "OUT/images/";
+pub const FORMULA_DIR: &str = "OUT/formulas";
+
+fn gen_uid(idx: usize) -> String {
+    format!("{:020}", idx)
+}
 
 // performs processing
 // (1) s/\cal/\mathcal
@@ -161,6 +167,7 @@ fn main() {
     std::fs::create_dir_all(OUT_DIR).unwrap();
     // create child directory
     std::fs::create_dir_all(IMAGE_OUT_DIR).unwrap();
+    std::fs::create_dir_all(FORMULA_DIR).unwrap();
 
     // remove the file if it already exists
     if let Err(e) = std::fs::remove_file(&OUTFILE) {
@@ -185,19 +192,19 @@ fn main() {
     let mut fail_parse = 0;
     let mut fail_with_parse = 0;
 
-    // iterate through their_file line by line
-    for (idx, line_wrap) in std::io::BufReader::new(their_file).lines().enumerate() {
+    std::io::BufReader::new(their_file).lines().enumerate().into_iter().for_each(|(idx, line_wrap)| {
+        let uid = gen_uid(idx);
         // get the line
         let Ok(line) = line_wrap else {
             println!("ERROR READING LINE");
-            continue;
+            return;
         };
-        let (expr, filename) = split_to_pieces(&line);
+        // let (expr, filename) = split_to_pieces(&line);
         // println!("proccessing {filename}");
-        let Some(processed_expr) = process_line(expr.clone()) else {
-            println!("skipped {expr} for file {filename}");
+        let Some(processed_expr) = process_line(line.clone()) else {
+            println!("skipped {line} for file {uid}");
             fail_parse += 1;
-            continue;
+            return;
         };
         // println!("expression: {processed_expr}");
 
@@ -235,16 +242,22 @@ fn main() {
                         match pandoc_cmd.wait() {
                             Ok(o) => {
                                 if o.success() {
+                                    let formula_file_name = format!("{}/{}", FORMULA_DIR, uid);
+
                                     let mut output = String::new();
                                     if let Some(mut stdout) = pandoc_cmd.stdout.take() {
                                         stdout.read_to_string(&mut output).unwrap();
                                     }
+                                    let mut formula_file = File::create(formula_file_name.clone()).unwrap();
+                                    formula_file.write_all(output.as_bytes()).unwrap();
+                                    formula_file.flush().unwrap();
+
                                     success_idx += 1;
                                     success += 1;
-                                    let file_name_new = filename.replace(r".png", r".svg");
+                                    let file_name_new = format!("{uid}.svg");
                                     match std::process::Command::new("typst")
                                         .arg("compile")
-                                        .arg("-")
+                                        .arg(formula_file_name)
                                         .arg(format!("{}/{}", IMAGE_OUT_DIR, file_name_new))
                                         .stdin(Stdio::piped())
                                         .spawn() {
@@ -253,7 +266,7 @@ fn main() {
                                                 Ok(_) => {
                                                     println!("SUCCESS:{:?}", success_idx);
                                                     if let Err(e) = writeln!(&mut out_file, "{output},{file_name_new}") {
-                                                        println!("ERR writing to file {filename}: {e}");
+                                                        println!("ERR writing to file {file_name_new}: {e}");
                                                     };
                                                 },
                                                 Err(e) => {
@@ -273,7 +286,7 @@ fn main() {
                                     // println!("ERROR");
                                 }
 
-                                continue;
+                                return;
                             }
                             Err(_e) => {
                                 fail_with_parse += 1;
@@ -293,9 +306,12 @@ fn main() {
                 fail_with_parse += 1;
                 // println!("ERROR");
                 // println!("err {e}");
-                continue;
+                return;
             }
         }
-    }
+
+    });
+
+
     println!("success: {success}, fail_parse: {fail_parse}, fail_with_parse: {fail_with_parse}");
 }
