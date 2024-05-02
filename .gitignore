@@ -1,2 +1,3 @@
-/target
+target
 build_artifacts/*
+*.onnx
