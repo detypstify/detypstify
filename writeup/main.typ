@@ -37,12 +37,20 @@
   Fine tuning of large models has proven to be an effective way of achieving 
   state-of-the-art performance on a wide range of tasks @finetuning-good2. This
   performance is often better than smaller models dedicated to this particular task @finetuning-good1.
-  As a result, we decided to fine-tune a large model for our task as well. We chose the TrOCR model @trocr
-  as our base model as it was a fine-tuned specifically for OCR. We then perform further fine-tuning with 
-  math formulas to further specialize the model for our task.
-
+  As a result, we decided to fine-tune a large model for our task as well. 
   //TODO: talk about the model architecture -- transformer based etc
+  Text recognition is usually done either with Convolutional Neural Networks (CNN) or with Recurrent Neural Networks (RNN). 
+  We decided to diverge from the conventional approach and use a transformer based model. TrOCR @trocr, transformer based
+  optical character recognition, is a model which outperforms the state-of-the-art in OCR tasks, both handwritten and printed.
+  As such we decided to use this model as our base model for fine tuning. 
 
+  == Other formula generation tools
+  While there are several other tools which implement the same functionality as Detypstify, Detyptify has several features which
+  distinguish it from the competition. 
+  + *Support for Typst*, there are no tools which generate typst formulas from images.
+  + *Web Assembly*, Detypstify is deployed using Web Assembly which allows it to be statically deployed
+    and perform the computation on the client side which we haven't seen in other tools.
+  + *Transofrmer based OCR*, most tools use CNN or RNN based OCR, Detypstify uses a transformer based OCR. //TODO: GET concrete citations on what other people use
   
   // FIXME: What do these sections mean?
   == Machine Learning
