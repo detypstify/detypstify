@@ -69,7 +69,7 @@
     been widely used for similar tasks when converting to LaTeX. The bulk of the conversion was done using Pandoc,
     however, the conversion was not perfect and required several correction passes to ensure valid Typst formulas.
     This was because, to our knowledge, none of the datasets were generated post-Latex2e which led to several 
-    incompatibilities with Pandoc. The final dataset is available on Kaggle //TODO: ADD LINK ONCE WE UPLOAD IT
+    incompatibilities with Pandoc. The final dataset is available on Kaggle @typst-dataset.
     === Training
     We fine tuned the TrOCR model on our dataset using native PyTorch with the VisionEncoderDecorerModel class.
     The model was trained on a single Nvidia GeForce RTX 4090 GPU for 7 epochs with a batch size of 1 because of 
