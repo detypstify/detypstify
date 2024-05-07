@@ -22,7 +22,12 @@
   keywords: ("Machine Learning", "NeurIPS"),
   // one paragraph only
   abstract: [
-    Something about im2latex, openai, OCR
+    Optical Character Recognition (OCR) has seen widespread use in the past few years. It has been used for data entry automation,
+    document management, and even in the medical field for digitizing medical records. OCR makes the tasks both faster and less 
+    error prone. In this paper, we present Detypstify, a tool which uses state-of-the-art OCR to generate math formulas from images.
+    The problem of generating LaTeX formulas from images is not new, in fact it forms the basis of the OpenAI Im2Latex problem which 
+    was posted as part of the first request for research @openai. Detypstify tackles this problem in a new way by using a transformer
+    based model. We deploy this model using Web Assembly and WGPU to allow for client side computation. 
   ],
   bibliography: bibliography("main.bib"),
   bibliography-opts: (title: "References", full: true),  // Only for example paper.
@@ -31,13 +36,22 @@
 
 
 = Introduction
-  Optical Character Recognition (OCR) has seen widespread use in the past few years. It has been used for data entry automation,
-  document management, and even in the medical field for digitizing medical records. OCR makes the tasks both faster and less 
-  error prone. In this paper, we present Detypstify, a tool which uses state-of-the-art OCR to generate math formulas from images.
-  The problem of generating LaTeX formulas from images is not new, in fact it forms the basis of the OpenAI Im2Latex problem which 
-  was posted as part of the first request for research @openai. Detypstify tackles this problem in a new way by using a transformer
-  based model. We deploy this model using Web Assembly and WGPU to allow for client side computation. 
+  In recent years, Optical Character Recognition (OCR) technology has revolutionized various domains by streamlining tasks,
+  reducing errors, and enhancing efficiency. From automating data entry to facilitating document management, OCR has proven indispensable
+  across diverse industries. Moreover, its applications extend into the realm of healthcare, where it aids in the digitization of medical
+  records, contributing to the modernization of healthcare systems. Amidst this landscape, the demand for innovative OCR solutions
+  continues to grow.
 
+  This paper introduces Detypstify, a novel tool designed to address the challenge of generating mathematical formulas from images using
+  state-of-the-art OCR technology. While the task of converting images to LaTeX formulas is not new, Detypstify distinguishes itself through
+  its utilization of a transformer-based model. This approach marks a departure from traditional methods and builds upon the foundation laid
+  by initiatives such as the OpenAI Im2Latex problem, which has stimulated research in this domain.
+
+  Detypstify leverages Web Assembly and WGPU for deployment, enabling client-side computation and enhancing accessibility. By harnessing the
+  power of these technologies, Detypstify not only offers a sophisticated solution but also ensures seamless integration into existing workflows.
+  This paper provides an overview of the design, implementation, and performance of Detypstify, underscoring its potential to advance the field
+  of OCR and mathematical representation.
+  
 = Background and Related Work
   == Model
   Fine tuning of large models has proven to be an effective way of achieving 
@@ -79,8 +93,7 @@
 
     Our second attempt at training a model was using the Vision Transformer (ViT) model from scratch @latex_ocr. We 
     chose this implementation as it performed well for generating LaTeX code. The ViT model was trained on the same system
-    as the TrOCR model with the same batch size, but since we are training from scratch we need to train for a lager
-    number of epochs. 
+    as the TrOCR model with the same batch size, but since we are training from scratch we train for 30 epochs. 
 
   == Webapp
     == ONNX
