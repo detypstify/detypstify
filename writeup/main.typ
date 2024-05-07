@@ -29,6 +29,7 @@
   accepted: true,
 )
 
+
 = Introduction
   Optical Character Recognition (OCR) has seen widespread use in the past few years. It has been used for data entry automation,
   document management, and even in the medical field for digitizing medical records. OCR makes the tasks both faster and less 
@@ -74,7 +75,12 @@
     We fine tuned the TrOCR model on our dataset using native PyTorch with the VisionEncoderDecorerModel class.
     The model was trained on a single Nvidia GeForce RTX 4090 GPU for 7 epochs with a batch size of 1 because of 
     memory constraints. To evalutate the model we use the Character Error Rate (CER) which is the number of incorrect
-    characters divided by the total number of characters. 
+    characters divided by the total number of characters, this turned out to be a poor metric for our task.
+
+    Our second attempt at training a model was using the Vision Transformer (ViT) model from scratch @latex_ocr. We 
+    chose this implementation as it performed well for generating LaTeX code. The ViT model was trained on the same system
+    as the TrOCR model with the same batch size, but since we are training from scratch we need to train for a lager
+    number of epochs. 
 
   == Webapp
     == ONNX
@@ -88,12 +94,19 @@
     == Wasm + WGPU
     One of the main draws of using Web Assembly is the ability to run machine learning models in the browser on the client
     side. This means that we are not required to host a backend and can simple host the entire binary statically.
-    //TODO: talk about WGPU
     To compliment this portability, we use WGPU, a Rust library for interfacing with the GPU. This allows us to run the model
     on arbitrary hardware and ensures that the model runs as fast as possible. 
+
 = Results & Discussion
-  == Model
-  == Webapp
+  == TrOCR Fine Tuning
+  Although the fine-tuning took several days, the results were quite disappointing. The model was unable to predict even the 
+  most basic formulas. This is likely due to the Character Error Rate (CER) which works very well on handwriting and extracting 
+  the formulas themselves. Since we are mapping images to code and not text, we do not have a bijection between the input and 
+  the output. As a result the model doesn't perform well. Armed with these insights, we decited to try training a model from
+  scratch on the Typst dataset
+
+  == ViT Trainig
+  // TODO: RESULTS
 
 
 = Conclusion
@@ -101,6 +114,4 @@ We present Detypstify a tool that uses OCR for formula generation, we fine tune 
 this task and deploy it statically using Web Assembly and WGPU.
 //TODO: summarize results
 We hope that this tool will be useful for the Typst community.
-
 #pagebreak()
-
