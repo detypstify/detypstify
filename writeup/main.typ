@@ -70,11 +70,7 @@
   + *Support for Typst*, there are no tools which generate typst formulas from images.
   + *Web Assembly*, Detypstify is deployed using Web Assembly which allows it to be statically deployed
     and perform the computation on the client side which we haven't seen in other tools.
-  + *Transofrmer based OCR*, most tools use CNN or RNN based OCR, Detypstify uses a transformer based OCR. //TODO: GET concrete citations on what other people use
-  
-  // FIXME: What do these sections mean?
-  // == Machine Learning
-  // == Algorithm
+  + *Transofrmer based OCR*, most tools use CNN or RNN based OCR, Detypstify uses a transformer based OCR.
 
 == Method description
   == Model
@@ -93,7 +89,7 @@
 
     Our second attempt at training a model was using the Vision Transformer (ViT) model from scratch @latex_ocr. We 
     chose this implementation as it performed well for generating LaTeX code. The ViT model was trained on the same system
-    as the TrOCR model with the same batch size, but since we are training from scratch we train for 30 epochs. 
+    as the TrOCR model with the same batch size, but since we are training from scratch we train for 25 epochs. 
 
   == Webapp
     == ONNX
@@ -119,12 +115,17 @@
   scratch on the Typst dataset
 
   == ViT Trainig
-  // TODO: RESULTS
+  After training the model for 25 epochs, which corresponds to around 48 GPU hours, the accuracy plateaued at 2% which is nowhere
+  near the level required to make the tool usable. This is likely due to our lack of experience with the ViT model which led to 
+  poor hyperparameter choices. We are reaching out the authors of LaTeX OCR to see if they can provide us with the hyperparameters
+  they used to train their model and try again.
 
 
 = Conclusion
 We present Detypstify a tool that uses OCR for formula generation, we fine tune a transformer based large model for
 this task and deploy it statically using Web Assembly and WGPU.
-//TODO: summarize results
-We hope that this tool will be useful for the Typst community.
+Our results are not as good as we hoped, but with the help of the authors of LaTeX OCR we hope to improve the performance
+and make the tool usable. The deployment framework is ready, but with no model to deploy it is not very useful. After we 
+improve the model we will deploy it and make it available to the public. 
+We hope that this tool will eventually be useful for the Typst community.
 #pagebreak()
