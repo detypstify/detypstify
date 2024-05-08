@@ -93,7 +93,7 @@
 #let arxiv-notice = [Preprint. Under review.]
 
 #let public-notice = [
-  37th Conference on Neural Information Processing Systems (NeurIPS 2023).
+  Spring 2024 Applied ML Final Project (CPCS 582).
 ]
 
 #let format-author-names(authors) = {
