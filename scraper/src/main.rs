@@ -1,9 +1,14 @@
-use std::{fs::File, io::{BufRead, Read, Write}, process::Stdio};
+use std::{
+    fs::File,
+    io::{BufRead, Read, Write},
+    process::Stdio,
+};
 
 use rayon::iter::ParallelIterator;
 use regex::{Captures, Regex};
 pub const OUTFILE: &str = "OUT/out";
-pub const FILE_TO_READ: &str = "/home/jrestivo/Data/ml_final_project/PRINTED_TEX_230k/final_png_formulas.txt";
+pub const FILE_TO_READ: &str =
+    "/home/jrestivo/Data/ml_final_project/PRINTED_TEX_230k/final_png_formulas.txt";
 pub const OUT_DIR: &str = "OUT";
 pub const IMAGE_OUT_DIR: &str = "OUT/images/";
 pub const FORMULA_DIR: &str = "OUT/formulas";
@@ -31,13 +36,11 @@ fn process_line(s: String) -> Option<String> {
 
 fn process_small_space(s: String) -> Option<String> {
     Some(s.replace(r"\b ", r"\! "))
-
 }
 
 fn process_weird_characters(s: String) -> Option<String> {
     // \L is a weird L. Replace it with L
     Some(s.replace(r"\L ", r"L ").replace(r"\l ", r"l "))
-
 }
 
 fn process_mathcal(s: String) -> Option<String> {
@@ -49,7 +52,14 @@ fn process_sp(s: String) -> Option<String> {
 }
 
 fn process_bf(s: String) -> Option<String> {
-    Some(s.replace(r"\bf", r"\mathbf").replace(r"\boldmath", r"\mathbf").replace(r"\it", r"\mathit").replace(r"\tt", r"\texttt").replace(r"\sf", r"").replace(r"\i ", r"i "))
+    Some(
+        s.replace(r"\bf", r"\mathbf")
+            .replace(r"\boldmath", r"\mathbf")
+            .replace(r"\it", r"\mathit")
+            .replace(r"\tt", r"\texttt")
+            .replace(r"\sf", r"")
+            .replace(r"\i ", r"i "),
+    )
 }
 
 fn process_partial(s: String) -> Option<String> {
@@ -58,7 +68,26 @@ fn process_partial(s: String) -> Option<String> {
 
 // pandoc doesn't support vspace. Trash result
 fn process_text_mods(s: String) -> Option<String> {
-    if s.contains(r"\small") || s.contains(r"\tiny") || s.contains(r"\c ") || s.contains(r"\footnotesize") || s.contains(r"\scriptsize") || s.contains(r"\Bigl") || s.contains(r"\Bigr") || s.contains(r"\hline") || s.contains(r"\raisebox") || s.contains(r"\vphantom") || s.contains(r"\textup") || s.contains(r"`") || s.contains(r"\mit ") || s.contains(r"\do ") || s.contains(r"\em ") || s.contains(r"\atop") || s.contains(r"\large ") || s.contains(r"\label") || s.contains(r"\raise "){
+    if s.contains(r"\small")
+        || s.contains(r"\tiny")
+        || s.contains(r"\c ")
+        || s.contains(r"\footnotesize")
+        || s.contains(r"\scriptsize")
+        || s.contains(r"\Bigl")
+        || s.contains(r"\Bigr")
+        || s.contains(r"\hline")
+        || s.contains(r"\raisebox")
+        || s.contains(r"\vphantom")
+        || s.contains(r"\textup")
+        || s.contains(r"`")
+        || s.contains(r"\mit ")
+        || s.contains(r"\do ")
+        || s.contains(r"\em ")
+        || s.contains(r"\atop")
+        || s.contains(r"\large ")
+        || s.contains(r"\label")
+        || s.contains(r"\raise ")
+    {
         None
     } else {
         Some(s)
@@ -103,28 +132,29 @@ fn process_hspace(s: String) -> Option<String> {
         return None;
     }
 
-
-
-
     let regex = Regex::new(r"(\\hspace\s*)\{([0-9a-z\s]*)\}").unwrap();
-    let result = regex.replace_all(&s, |caps: &Captures| {
-        format!("{} {{ {:} }}", &caps[1], caps[2].replace(" ", ""))
-    }).to_string();
+    let result = regex
+        .replace_all(&s, |caps: &Captures| {
+            format!("{} {{ {:} }}", &caps[1], caps[2].replace(" ", ""))
+        })
+        .to_string();
 
     let has_hspace_ex_regex = Regex::new(r"\\hspace\s*\{.*ex.*\}").unwrap();
-    if has_hspace_ex_regex.is_match(&result){
+    if has_hspace_ex_regex.is_match(&result) {
         return None;
     }
 
     let regex_2 = Regex::new(r"\\hspace\s*\{ ([0-9][0-9]+)mm \}").unwrap();
-    let result_2 = regex_2.replace_all(&result, |caps: &regex::Captures| {
-        // Capture the digits and convert to an integer
-        let value: i32 = caps[1].parse().unwrap();
-        // Multiply by 10 to convert from mm to cm
-        let converted_value = value * 10;
-        // Replace 'mm' with 'cm' and insert the new value
-        format!("\\hspace {{{}cm}}", converted_value)
-    }).to_string();
+    let result_2 = regex_2
+        .replace_all(&result, |caps: &regex::Captures| {
+            // Capture the digits and convert to an integer
+            let value: i32 = caps[1].parse().unwrap();
+            // Multiply by 10 to convert from mm to cm
+            let converted_value = value * 10;
+            // Replace 'mm' with 'cm' and insert the new value
+            format!("\\hspace {{{}cm}}", converted_value)
+        })
+        .to_string();
 
     let regex_3 = Regex::new(r"\\hspace\s*\{ ([\s\.0-9]*)mm \}").unwrap();
     let regex_4 = Regex::new(r"\\hspace\s*\*\s*\{ ").unwrap();
@@ -133,6 +163,29 @@ fn process_hspace(s: String) -> Option<String> {
     }
 
     Some(result_2)
+}
+
+fn post_processing(s: String) -> String {
+    process_resized_parens(s)
+}
+
+// replace paren.l with ( and paren.r with ) while keeping the rest of the string the same
+// examples:
+// #scale(x: 180%, y: 180%)[paren.l] => #scale(x: 180%, y: 180%)[(]
+// #scale(x: 90%, y: 100%)[paren.l] => #scale(x: 90%, y: 100%)[(]
+// #scale(x: 20%, y: 170%)[paren.l] => #scale(x: 20%, y: 170%)[(]
+// #scale(x: 33%, y: 39%)[paren.l] => #scale(x: 33%, y: 33%)[(]
+// #scale(x: 180%, y: 180%)[paren.l] => #scale(x: 180%, y: 180%)[(]
+fn process_resized_parens(s: String) -> String {
+    let regex = Regex::new(r"(\#scale\(x: [0-9]+%, y: [0-9]+%\)\[paren\.[lr]\])").unwrap();
+    let result = regex.replace_all(&s, |caps: &Captures| {
+        let mut new_str = caps[1].to_string();
+        new_str = new_str.replace("paren.l", "(");
+        new_str = new_str.replace("paren.r", ")");
+        new_str
+    });
+
+    result.to_string()
 }
 
 // returns: (expr, filename)
@@ -247,6 +300,9 @@ fn main() {
                                     let mut output = String::new();
                                     if let Some(mut stdout) = pandoc_cmd.stdout.take() {
                                         stdout.read_to_string(&mut output).unwrap();
+                                        if !output.is_empty() {
+                                            output = post_processing(output);
+                                        }
                                     }
                                     let mut formula_file = File::create(formula_file_name.clone()).unwrap();
                                     formula_file.write_all(output.as_bytes()).unwrap();
@@ -311,7 +367,6 @@ fn main() {
         }
 
     });
-
 
     println!("success: {success}, fail_parse: {fail_parse}, fail_with_parse: {fail_with_parse}");
 }
