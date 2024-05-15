@@ -3,3 +3,4 @@ build_artifacts/*
 *.onnx
 *.pdf
 .DS_Store
+venv
