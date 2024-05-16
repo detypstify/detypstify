@@ -4,11 +4,9 @@ use std::{
     process::Stdio,
 };
 
-use rayon::iter::ParallelIterator;
 use regex::{Captures, Regex};
 pub const OUTFILE: &str = "OUT/out";
-pub const FILE_TO_READ: &str =
-    "/home/jrestivo/Data/ml_final_project/PRINTED_TEX_230k/final_png_formulas.txt";
+pub const FILE_TO_READ: &str = "/shared/PRINTED_TEX_230k/final_png_formulas.txt";
 pub const OUT_DIR: &str = "OUT";
 pub const IMAGE_OUT_DIR: &str = "OUT/images/";
 pub const FORMULA_DIR: &str = "OUT/formulas";
@@ -189,31 +187,31 @@ fn process_resized_parens(s: String) -> String {
 }
 
 // returns: (expr, filename)
-fn split_to_pieces(s: &str) -> (String, String) {
-    let chars = s.chars().rev();
-    let mut expr: String = "".to_string();
-    let mut filename: String = "".to_string();
-    let mut is_fn = true;
-
-    for char in chars {
-        if is_fn {
-            if char == ',' {
-                is_fn = false;
-            } else {
-                filename.push(char);
-            }
-        } else {
-            if char != '"' {
-                expr.push(char);
-            }
-        }
-    }
-
-    (
-        expr.chars().rev().collect(),
-        filename.chars().rev().collect(),
-    )
-}
+// fn split_to_pieces(s: &str) -> (String, String) {
+//     let chars = s.chars().rev();
+//     let mut expr: String = "".to_string();
+//     let mut filename: String = "".to_string();
+//     let mut is_fn = true;
+//
+//     for char in chars {
+//         if is_fn {
+//             if char == ',' {
+//                 is_fn = false;
+//             } else {
+//                 filename.push(char);
+//             }
+//         } else {
+//             if char != '"' {
+//                 expr.push(char);
+//             }
+//         }
+//     }
+//
+//     (
+//         expr.chars().rev().collect(),
+//         filename.chars().rev().collect(),
+//     )
+// }
 
 fn main() {
     // create the directory
@@ -351,14 +349,14 @@ fn main() {
                             }
                         }
                     }
-                    Err(e) => {
+                    Err(_) => {
                         fail_with_parse += 1;
                         // println!("ERROR");
                         // println!("err {e}");
                     }
                 }
             }
-            Err(e) => {
+            Err(_) => {
                 fail_with_parse += 1;
                 // println!("ERROR");
                 // println!("err {e}");
