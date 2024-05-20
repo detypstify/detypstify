@@ -1,13 +1,28 @@
-use web_sys::window;
+#![allow(non_snake_case)]
+
+use dioxus::prelude::*;
+use tracing::Level;
 
 fn main() {
-    console_error_panic_hook::set_once();
+    // Init logger
+    dioxus_logger::init(Level::INFO).expect("failed to init logger");
+    launch(App);
+}
 
-    let document = window()
-        .and_then(|win| win.document())
-        .expect("Could not access the document");
-    let body = document.body().expect("Could not access document.body");
-    let text_node = document.create_text_node("Hello, world!");
-    body.append_child(text_node.as_ref())
-        .expect("Failed to append text");
+#[component]
+fn App() -> Element {
+    // Build cool things ✌️
+
+    rsx! {
+        link { rel: "stylesheet", href: "main.css" }
+        img { src: "header.svg", id: "header" }
+        div { id: "links",
+            a { target: "_blank", href: "https://dioxuslabs.com/learn/0.5/", "📚 Learn Dioxus" }
+            a { target: "_blank", href: "https://dioxuslabs.com/awesome", "🚀 Awesome Dioxus" }
+            a { target: "_blank", href: "https://github.com/dioxus-community/", "📡 Community Libraries" }
+            a { target: "_blank", href: "https://github.com/DioxusLabs/dioxus-std", "⚙️ Dioxus Standard Library" }
+            a { target: "_blank", href: "https://marketplace.visualstudio.com/items?itemName=DioxusLabs.dioxus", "💫 VSCode Extension" }
+            a { target: "_blank", href: "https://discord.gg/XgGxMSkvUM", "👋 Community Discord" }
+        }
+    }
 }
