@@ -4,3 +4,4 @@ build_artifacts/*
 *.pdf
 .DS_Store
 venv
+dist
