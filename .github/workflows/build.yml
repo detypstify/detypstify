@@ -29,7 +29,7 @@ jobs:
     - run: |
         cd app
         nix develop -c dx build --release
-        cp tailwind.css dist/
+        cp public/tailwind.css dist/
     - uses: crazy-max/ghaction-github-pages@v4
       with:
         target_branch: gh-pages
