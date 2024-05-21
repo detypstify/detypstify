@@ -17,6 +17,7 @@ asset_dir = "assets"
 
 # HTML title tag content
 title = "Detypstify"
+base_path = "justin.restivo.me/detypstify"
 
 [web.watcher]
 
@@ -31,7 +32,7 @@ watch_path = ["src", "assets"]
 
 # CSS style file
 
-style = ["/tailwind.css"]
+style = ["./tailwind.css"]
 
 # Javascript code file
 script = []
