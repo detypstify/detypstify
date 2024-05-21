@@ -1,48 +1,107 @@
 pub mod model;
-use burn::backend::{wgpu::WgpuDevice, Wgpu};
+use std::f64;
+use std::io::Cursor;
+
 pub use model::mnist::Model;
 
+use wasm_bindgen::prelude::*;
+
+use burn::backend::Wgpu;
 use dioxus::prelude::*;
-use tracing::{event, Level};
+use image::io::Reader as ImageReader;
+use tracing::Level;
+
+// Urls are relative to your Cargo.toml file
+const _TAILWIND_URL: &str = manganis::mg!(file("public/tailwind.css"));
 
 fn main() {
     // Init logger
     dioxus_logger::init(Level::DEBUG).expect("failed to init logger");
-    type Backend = Wgpu;
-
-    let device = WgpuDevice::default();
-    let model = Model::default();
-    tracing::debug!("debug");
+    // type Backend = Wgpu;
+    // let device = WgpuDevice::default();
+    // let model = Model::default();
+    // tracing::debug!("debug");
     launch(App);
 }
 
 #[component]
 fn App() -> Element {
-    // Build cool things ✌️
-    let mut input_file: Signal<Vec<String>> = use_signal(Vec::new);
-
     rsx! {
         link { rel: "stylesheet", href: "main.css" }
-        // img { src: "header.svg", id: "header" }
-        div {
-            id: "links",
-            p { "Upload your file" }
+        link {
+            rel: "stylesheet",
+            href: "https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css"
         }
-        input {
-            // tell the input to pick a file
-            r#type: "file",
-            // list the accepted extensions
-            accept: ".png",
-            // pick multiple files
-            multiple: false,
-            onchange: move |evt| {
-                async move {
-                        if let Some(file_engine) = evt.files() {
-                        let files = file_engine.files();
-                        for file_name in &files {
-                            if let Some(file) = file_engine.read_file_to_string(file_name).await
-                            {
-                                input_file.write().push(file);
+        section { class: "container",
+            div { id: "header",
+                class: "flex flex-row sticky items-center justify-center z-10",
+                // img { src: "assets/logo.png", class: "w-24 h-24" }
+                h1 {
+                    class: "text-4xl font-bold mb-4",
+                    style:"font-family:'0xProto Regular",
+                    "Detypstify"
+                }
+            div {
+                class: "flex justify-center",
+                a {
+                    target: "_blank",
+                    href: "https://github.com/DieracDelta/detypstify",
+                    i { class: "fa fa-github", }
+                }
+            }
+            }
+            div { class: "flex align-middle justify-center mb-4",
+                canvas {
+                    id: "canvas",
+                    class: "border border-gray-700 bg-gray-800",
+                    width: "400",
+                    height: "300",
+                    onmousedown: move |_| {
+                        // start drawing
+                        draw_smiley()
+                    },
+                    onmouseup: move |_| {draw_smiley()},
+                }
+            }
+            div { class: "flex align-middle justify-center mb-4",
+                div {
+                    // make the class be dark and matching with the theme
+                    class: "button-like",
+                    tabindex: "0",
+                    id: "btn",
+                    onclick: move |_| {
+                        let canvas = web_sys::window().unwrap().document().unwrap()
+                            .get_element_by_id("canvas").unwrap();
+                        let context = canvas.dyn_into::<web_sys::HtmlCanvasElement>()
+                            .unwrap().get_context("2d").unwrap().unwrap()
+                            .dyn_into::<web_sys::CanvasRenderingContext2d>().unwrap();
+                        context.clear_rect(0.0, 0.0, 400.0, 300.0);
+                    },
+                    style:"font-family:'0xProto Regular",
+                    "Clear"
+                }
+                div { class: "flex justify-center mb-4 button-like",
+                  style:"font-family:'0xProto Regular",
+                  "Upload Image",
+                    input {
+                        r#type: "hidden",
+                        id: "imageUpload",
+                        accept: "image/*",
+                        onchange: move |evt| {
+                            async move {
+                                    if let Some(file_engine) = evt.files() {
+                                    let files = file_engine.files();
+                                    for file_name in &files {
+                                        if let Some(bytes) = file_engine.read_file(file_name).await
+                                        {
+                                            let image = ImageReader::new(Cursor::new(bytes))
+                                                .with_guessed_format().unwrap()
+                                                .decode().unwrap();
+                                            tracing::debug!("Image width: {}, height: {}",
+                                                image.width(), image.height());
+                                        }
+                                    }
+                                }
                             }
                         }
                     }
@@ -50,4 +109,45 @@ fn App() -> Element {
             }
         }
     }
+}
+
+pub fn draw_smiley() {
+    let document = web_sys::window().unwrap().document().unwrap();
+    let canvas = document.get_element_by_id("canvas").unwrap();
+    let canvas: web_sys::HtmlCanvasElement = canvas
+        .dyn_into::<web_sys::HtmlCanvasElement>()
+        .map_err(|_| ())
+        .unwrap();
+
+    let context = canvas
+        .get_context("2d")
+        .unwrap()
+        .unwrap()
+        .dyn_into::<web_sys::CanvasRenderingContext2d>()
+        .unwrap();
+
+    context.begin_path();
+
+    // Draw the outer circle.
+    context
+        .arc(75.0, 75.0, 50.0, 0.0, f64::consts::PI * 2.0)
+        .unwrap();
+
+    // Draw the mouth.
+    context.move_to(110.0, 75.0);
+    context.arc(75.0, 75.0, 35.0, 0.0, f64::consts::PI).unwrap();
+
+    // Draw the left eye.
+    context.move_to(65.0, 65.0);
+    context
+        .arc(60.0, 65.0, 5.0, 0.0, f64::consts::PI * 2.0)
+        .unwrap();
+
+    // Draw the right eye.
+    context.move_to(95.0, 65.0);
+    context
+        .arc(90.0, 65.0, 5.0, 0.0, f64::consts::PI * 2.0)
+        .unwrap();
+
+    context.stroke();
 }

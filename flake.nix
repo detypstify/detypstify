@@ -21,7 +21,7 @@
     let
         fenixStable = with fenix.packages.${system}; combine [
             (stable.withComponents [ "cargo" "clippy" "rust-src" "rustc" "rustfmt" "llvm-tools-preview" ])
-            # targets.wasm32-unknown-unknown.stable.rust-std
+            targets.wasm32-unknown-unknown.stable.rust-std
           ];
         # overlaid = final: prev:
         #   {
@@ -49,13 +49,14 @@
             shellHook = ''
               export CARGO_TARGET_DIR="$(git rev-parse --show-toplevel)/target_ditrs/nix_rustc";
             '';
-            LD_LIBRARY_PATH = "${pkgs.xorg.libX11}/lib:${pkgs.xorg.libXcursor}/lib:${pkgs.xorg.libXrandr}/lib:${pkgs.xorg.libXi}/lib:${pkgs.libxkbcommon}/lib:${pkgs.vulkan-loader}/lib:${pkgs.stdenv.cc.cc.lib}/lib:${pkgs.libGL}/lib"; /* :${pkgs.glib.out}/lib"; */
+            # LD_LIBRARY_PATH = "${pkgs.xorg.libX11}/lib:${pkgs.xorg.libXcursor}/lib:${pkgs.xorg.libXrandr}/lib:${pkgs.xorg.libXi}/lib:${pkgs.libxkbcommon}/lib:${pkgs.vulkan-loader}/lib:${pkgs.stdenv.cc.cc.lib}/lib:${pkgs.libGL}/lib"; /* :${pkgs.glib.out}/lib"; */
             RUST_SRC_PATH = pkgs.rustPlatform.rustLibSrc;
             buildInputs =
               with pkgs; [
+                dioxus-cli
                 ninja
                 pkg-config
-                (python311.withPackages (ps: with ps; [ (torch.override { cudaSupport =  true; } /* .override { cudaSupport = true; } */ ) /* torchvision */ numpy pip python scikit-learn datasets transformers jiwer jupyter ipywidgets onnxruntime onnx ] ))
+                # (python311.withPackages (ps: with ps; [ (torch.override { cudaSupport =  true; } /* .override { cudaSupport = true; } */ ) /* torchvision */ numpy pip python scikit-learn datasets transformers jiwer jupyter ipywidgets onnxruntime onnx ] ))
                 typst
                 pandoc
                 wasm-bindgen-cli
@@ -67,17 +68,18 @@
                 corepack
 
                 ninja
-                vulkan-loader
-                xorg.libX11.dev
-                xorg.libX11
-                libxkbcommon
+                # vulkan-loader
+                # xorg.libX11.dev
+                # xorg.libX11
+                # libxkbcommon
+                nodejs
                 fontconfig
-                typst
-                typst-lsp
-                openblas
-                cargo-expand
-                boost
-                pkg-config
+                # typst
+                # typst-lsp
+                # openblas
+                # cargo-expand
+                # boost
+                # pkg-config
                 openssl.dev
                 openssl
 
