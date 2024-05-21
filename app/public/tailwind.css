@@ -620,6 +620,10 @@ video {
   width: 6rem;
 }
 
+.flex-row {
+  flex-direction: row;
+}
+
 .flex-col {
   flex-direction: column;
 }

@@ -34,9 +34,17 @@ fn App() -> Element {
         }
         section { class: "container",
             div { id: "header",
-                class: "flex flex-col sticky items-center justify-center z-10",
+                class: "flex flex-row sticky items-center justify-center z-10",
                 // img { src: "assets/logo.png", class: "w-24 h-24" }
                 h1 { class: "text-4xl font-bold mb-4", "Detypstify" }
+            div {
+                class: "flex justify-center",
+                a {
+                    target: "_blank",
+                    href: "https://github.com/DieracDelta/detypstify",
+                    i { class: "fa fa-github", }
+                }
+            }
             }
             div { class: "flex align-middle justify-center mb-4",
                 canvas {
@@ -51,8 +59,12 @@ fn App() -> Element {
                     onmouseup: move |_| {draw_smiley()},
                 }
             }
-            div { class: "flex justify-center mb-4",
-                button { id: "btn",
+            div { class: "flex align-middle justify-center mb-4",
+                div {
+                    // make the class be dark and matching with the theme
+                    class: "button-like",
+                    tabindex: "0",
+                    id: "btn",
                     onclick: move |_| {
                         let canvas = web_sys::window().unwrap().document().unwrap()
                             .get_element_by_id("canvas").unwrap();
@@ -63,42 +75,30 @@ fn App() -> Element {
                     },
                     "Clear"
                 }
-            }
-            label {
-                class: "",
-                "Upload Image"
-            }
-            div { class: "flex justify-center mb-4",
-                input {
-                    r#type: "file",
-                    id: "imageUpload",
-                    class: "hidden",
-                    accept: "image/*",
-                    onchange: move |evt| {
-                        async move {
-                                if let Some(file_engine) = evt.files() {
-                                let files = file_engine.files();
-                                for file_name in &files {
-                                    if let Some(bytes) = file_engine.read_file(file_name).await
-                                    {
-                                        let image = ImageReader::new(Cursor::new(bytes))
-                                            .with_guessed_format().unwrap()
-                                            .decode().unwrap();
-                                        tracing::debug!("Image width: {}, height: {}",
-                                            image.width(), image.height());
+                div { class: "flex justify-center mb-4 button-like",
+                  "Upload Image",
+                    input {
+                        r#type: "hidden",
+                        id: "imageUpload",
+                        accept: "image/*",
+                        onchange: move |evt| {
+                            async move {
+                                    if let Some(file_engine) = evt.files() {
+                                    let files = file_engine.files();
+                                    for file_name in &files {
+                                        if let Some(bytes) = file_engine.read_file(file_name).await
+                                        {
+                                            let image = ImageReader::new(Cursor::new(bytes))
+                                                .with_guessed_format().unwrap()
+                                                .decode().unwrap();
+                                            tracing::debug!("Image width: {}, height: {}",
+                                                image.width(), image.height());
+                                        }
                                     }
                                 }
                             }
                         }
                     }
-                }
-            }
-            div {
-                class: "flex justify-center space-x-4",
-                a {
-                    target: "_blank",
-                    href: "https://github.com/DieracDelta/detypstify",
-                    i { class: "fa fa-github", }
                 }
             }
         }
