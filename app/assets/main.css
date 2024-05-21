@@ -1,5 +1,14 @@
 body {
-    background-color: #111216;
+    font-family: 'Inter', sans-serif;
+    background-color: #1a202c; /* Dark background color */
+    color: #f7fafc; /* Light text color */
+}
+
+canvas {
+    max-width: 100%;
+    height: auto;
+    background-color: #2d3748; /* Darker background for canvas */
+    border-color: #4a5568; /* Dark border color */
 }
 
 #main {
@@ -10,6 +19,8 @@ body {
     align-items: center;
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif
 }
+
+
 
 #links {
     width: 400px;
@@ -35,6 +46,12 @@ body {
     cursor: pointer;
 }
 
-#header {
-    max-width: 1200px;
+input[type="file"] + label {
+    background-color: #3182ce; /* Blue background for button */
+    color: #f7fafc; /* Light text color for button */
 }
+
+input[type="file"] + label:hover {
+    background-color: #2b6cb0; /* Darker blue for hover effect */
+}
+
