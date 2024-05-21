@@ -71,14 +71,12 @@ canvas {
 }
 
 @font-face {
-  font-family: '0xProto Nerd Font Mono';
-  src: url('/fonts/0xProtoNerdFontMono.woff2') format('woff2'),
-       url('/fonts/0xProtoNerdFontMono.woff') format('woff'),
-       url('/fonts/0xProtoNerdFontMono.ttf') format('truetype');
-  font-weight: normal;
-  font-style: normal;
+    font-family: '0xProto Regular';
+    src: url(https://humantooth.neocities.org/fonts/0xProto-Regular.woff2) format('woff2');
+    font-weight: normal;
+    font-style: normal;
 }
 
 body {
-  font-family: '0xProto Nerd Font Mono', monospace;
+  font-family: '0xProto Regular', ui-serif;
 }

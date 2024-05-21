@@ -71,6 +71,7 @@
                 # xorg.libX11.dev
                 # xorg.libX11
                 # libxkbcommon
+                nodejs
                 fontconfig
                 # typst
                 # typst-lsp
@@ -78,8 +79,8 @@
                 # cargo-expand
                 # boost
                 # pkg-config
-                # openssl.dev
-                # openssl
+                openssl.dev
+                openssl
 
               ];
           };

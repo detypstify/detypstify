@@ -36,7 +36,11 @@ fn App() -> Element {
             div { id: "header",
                 class: "flex flex-row sticky items-center justify-center z-10",
                 // img { src: "assets/logo.png", class: "w-24 h-24" }
-                h1 { class: "text-4xl font-bold mb-4", "Detypstify" }
+                h1 {
+                    class: "text-4xl font-bold mb-4",
+                    style:"font-family:'0xProto Regular",
+                    "Detypstify"
+                }
             div {
                 class: "flex justify-center",
                 a {
@@ -73,9 +77,11 @@ fn App() -> Element {
                             .dyn_into::<web_sys::CanvasRenderingContext2d>().unwrap();
                         context.clear_rect(0.0, 0.0, 400.0, 300.0);
                     },
+                    style:"font-family:'0xProto Regular",
                     "Clear"
                 }
                 div { class: "flex justify-center mb-4 button-like",
+                  style:"font-family:'0xProto Regular",
                   "Upload Image",
                     input {
                         r#type: "hidden",
