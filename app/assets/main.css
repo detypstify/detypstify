@@ -55,3 +55,44 @@ input[type="file"] + label:hover {
     background-color: #2b6cb0; /* Darker blue for hover effect */
 }
 
+.button-like {
+    display: inline-block;
+    padding: 10px 20px;
+    margin: 10px;
+    background-color: #2d3748;
+    color: white;
+    text-align: center;
+    font-size: 16px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s, box-shadow 0.3s;
+    user-select: none; /* Prevent text selection */
+}
+
+.button-like:hover {
+    background-color: #2b6cb0; /* Darker blue on hover */
+}
+
+.button-like:active {
+    background-color: #1f1f1f; /* Even darker blue on click */
+    box-shadow: 0 5px #666;
+    transform: translateY(4px);
+}
+
+.button-like:focus {
+    outline: none;
+}
+
+@font-face {
+  font-family: '0xProto Nerd Font Mono';
+  src: url('/fonts/0xProtoNerdFontMono.woff2') format('woff2'),
+       url('/fonts/0xProtoNerdFontMono.woff') format('woff'),
+       url('/fonts/0xProtoNerdFontMono.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+}
+
+body {
+  font-family: '0xProto Nerd Font Mono', monospace;
+}

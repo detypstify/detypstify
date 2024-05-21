@@ -41,28 +41,26 @@ fn App() -> Element {
                     onmouseup: move |evt| {draw_smiley()},
                 }
             }
-            div { class: "flex justify-center mb-4",
-                button { id: "btn",
-                    onclick: move |_| {
-                        let canvas = web_sys::window().unwrap().document().unwrap()
-                            .get_element_by_id("canvas").unwrap();
-                        let context = canvas.dyn_into::<web_sys::HtmlCanvasElement>()
-                            .unwrap().get_context("2d").unwrap().unwrap()
-                            .dyn_into::<web_sys::CanvasRenderingContext2d>().unwrap();
-                        context.clear_rect(0.0, 0.0, 400.0, 300.0);
-                    },
-                    "Clear"
-                }
+            div {
+                // make the class be dark and matching with the theme
+                class: "button-like",
+                tabindex: "0",
+                id: "btn",
+                onclick: move |_| {
+                    let canvas = web_sys::window().unwrap().document().unwrap()
+                        .get_element_by_id("canvas").unwrap();
+                    let context = canvas.dyn_into::<web_sys::HtmlCanvasElement>()
+                        .unwrap().get_context("2d").unwrap().unwrap()
+                        .dyn_into::<web_sys::CanvasRenderingContext2d>().unwrap();
+                    context.clear_rect(0.0, 0.0, 400.0, 300.0);
+                },
+                "Clear"
             }
-            label {
-                class: "cursor-pointer bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded",
-                "Upload Image"
-            }
-            div { class: "flex justify-center mb-4",
+            div { class: "flex justify-center mb-4 button-like",
+              "Upload Image",
                 input {
-                    r#type: "file",
+                    r#type: "hidden",
                     id: "imageUpload",
-                    class: "hidden",
                     accept: "image/*",
                     onchange: move |evt| {
                         async move {
