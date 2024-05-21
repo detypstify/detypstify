@@ -25,12 +25,10 @@ jobs:
         name: jrestivo
         signingKey: '${{ secrets.CACHIX_AUTH_TOKEN }}'
     - run: |
-      nix build .
-
+        nix build .
     - run: |
-      cd app
-      nix develop -c dx build --release
-
+        cd app
+        nix develop -c dx build --release
     - uses: crazy-max/ghaction-github-pages@v4
       with:
         target_branch: gh-pages
