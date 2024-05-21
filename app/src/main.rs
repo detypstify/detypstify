@@ -1,7 +1,10 @@
 pub mod model;
 use std::f64;
 use std::io::Cursor;
+use std::sync::atomic::{AtomicU64, Ordering};
+use std::sync::Arc;
 
+use dioxus::html::input_data::MouseButton;
 pub use model::mnist::Model;
 
 use wasm_bindgen::prelude::*;
@@ -13,6 +16,28 @@ use tracing::Level;
 
 // Urls are relative to your Cargo.toml file
 const _TAILWIND_URL: &str = manganis::mg!(file("public/tailwind.css"));
+
+#[derive(Debug, Clone)]
+struct Point {
+    x: Arc<AtomicU64>,
+    y: Arc<AtomicU64>,
+}
+
+impl Point {
+    fn new() -> Self {
+        Self {
+            x: Arc::default(),
+            y: Arc::default(),
+        }
+    }
+
+    fn get_coords(&self) -> (f64, f64) {
+        (
+            self.x.load(Ordering::SeqCst) as f64,
+            self.y.load(Ordering::SeqCst) as f64,
+        )
+    }
+}
 
 fn main() {
     // Init logger
@@ -26,6 +51,11 @@ fn main() {
 
 #[component]
 fn App() -> Element {
+    let pos = Point::new();
+    let pos_down = pos.clone();
+    let pos_enter = pos.clone();
+    let pos_move = pos.clone();
+
     rsx! {
         link { rel: "stylesheet", href: "main.css" }
         link {
@@ -56,11 +86,20 @@ fn App() -> Element {
                     class: "border border-gray-700 bg-gray-800",
                     width: "400",
                     height: "300",
-                    onmousedown: move |_| {
-                        // start drawing
-                        draw_smiley()
+                    onmousedown:
+                    move |evt| {
+                      set_position(evt, pos_down.clone());
+
                     },
-                    onmouseup: move |_| {draw_smiley()},
+                    onmouseenter : move |evt| {
+                      set_position(evt, pos_enter.clone());
+                    },
+                    onmouseup: move |_| {
+                        // TODO: capture the image and run prediction
+                    },
+                    onmousemove: move |event| {
+                        draw(event, pos_move.clone())
+                    },
                 }
             }
             div { class: "flex align-middle justify-center mb-4",
@@ -111,43 +150,37 @@ fn App() -> Element {
     }
 }
 
-pub fn draw_smiley() {
-    let document = web_sys::window().unwrap().document().unwrap();
-    let canvas = document.get_element_by_id("canvas").unwrap();
-    let canvas: web_sys::HtmlCanvasElement = canvas
-        .dyn_into::<web_sys::HtmlCanvasElement>()
-        .map_err(|_| ())
-        .unwrap();
+fn set_position(event: MouseEvent, pos: Point) {
+    let coords = event.element_coordinates();
+    pos.x.store(coords.x as u64, Ordering::SeqCst);
+    pos.y.store(coords.y as u64, Ordering::SeqCst);
+}
 
-    let context = canvas
-        .get_context("2d")
-        .unwrap()
-        .unwrap()
-        .dyn_into::<web_sys::CanvasRenderingContext2d>()
-        .unwrap();
+fn draw(event: MouseEvent, pos: Point) {
+    if event.held_buttons().contains(MouseButton::Primary) {
+        let coords = event.element_coordinates();
+        let canvas = web_sys::window()
+            .unwrap()
+            .document()
+            .unwrap()
+            .get_element_by_id("canvas")
+            .unwrap();
+        let context = canvas
+            .dyn_into::<web_sys::HtmlCanvasElement>()
+            .unwrap()
+            .get_context("2d")
+            .unwrap()
+            .unwrap()
+            .dyn_into::<web_sys::CanvasRenderingContext2d>()
+            .unwrap();
+        context.begin_path();
+        let (x, y) = pos.get_coords();
+        context.move_to(x, y as f64);
+        set_position(event, pos);
 
-    context.begin_path();
-
-    // Draw the outer circle.
-    context
-        .arc(75.0, 75.0, 50.0, 0.0, f64::consts::PI * 2.0)
-        .unwrap();
-
-    // Draw the mouth.
-    context.move_to(110.0, 75.0);
-    context.arc(75.0, 75.0, 35.0, 0.0, f64::consts::PI).unwrap();
-
-    // Draw the left eye.
-    context.move_to(65.0, 65.0);
-    context
-        .arc(60.0, 65.0, 5.0, 0.0, f64::consts::PI * 2.0)
-        .unwrap();
-
-    // Draw the right eye.
-    context.move_to(95.0, 65.0);
-    context
-        .arc(90.0, 65.0, 5.0, 0.0, f64::consts::PI * 2.0)
-        .unwrap();
-
-    context.stroke();
+        context.line_to(coords.x as f64, coords.y as f64);
+        context.set_stroke_style(&JsValue::from_str("white"));
+        context.set_line_width(5.0);
+        context.stroke();
+    }
 }
