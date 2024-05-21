@@ -53,6 +53,7 @@
             RUST_SRC_PATH = pkgs.rustPlatform.rustLibSrc;
             buildInputs =
               with pkgs; [
+                dioxus-cli
                 ninja
                 pkg-config
                 # (python311.withPackages (ps: with ps; [ (torch.override { cudaSupport =  true; } /* .override { cudaSupport = true; } */ ) /* torchvision */ numpy pip python scikit-learn datasets transformers jiwer jupyter ipywidgets onnxruntime onnx ] ))
