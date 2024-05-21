@@ -20,19 +20,3 @@ jobs:
         install_url: https://github.com/numtide/nix-flakes-installer/releases/download/nix-3.0pre20201007_5257a25/install
         extra_nix_config: |
           experimental-features = nix-command flakes
-    - uses: cachix/cachix-action@v8
-      with:
-        name: jrestivo
-        signingKey: '${{ secrets.CACHIX_AUTH_TOKEN }}'
-    - run: nix build .
-    - run: |
-      cd app
-      nix develop -c dx build --release
-    - name: Deploy to GitHub Pages
-      uses: crazy-max/ghaction-github-pages@v4
-      with:
-        target_branch: gh-pages
-        build_dir: ./src/dist
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
