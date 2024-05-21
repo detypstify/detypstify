@@ -11,11 +11,13 @@ use dioxus::prelude::*;
 use image::io::Reader as ImageReader;
 use tracing::Level;
 
+// Urls are relative to your Cargo.toml file
+const _TAILWIND_URL: &str = manganis::mg!(file("public/tailwind.css"));
+
 fn main() {
     // Init logger
     dioxus_logger::init(Level::DEBUG).expect("failed to init logger");
-    type Backend = Wgpu;
-
+    // type Backend = Wgpu;
     // let device = WgpuDevice::default();
     // let model = Model::default();
     // tracing::debug!("debug");
@@ -26,9 +28,17 @@ fn main() {
 fn App() -> Element {
     rsx! {
         link { rel: "stylesheet", href: "main.css" }
-        div { class: "container mx-auto p-4",
-            h1 { class: "text-4xl font-bold mb-4 text-center", "Detypstify" }
-            div { class: "flex justify-center mb-4",
+        link {
+            rel: "stylesheet",
+            href: "https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css"
+        }
+        section { class: "container",
+            div { id: "header",
+                class: "flex flex-col sticky items-center justify-center z-10",
+                // img { src: "assets/logo.png", class: "w-24 h-24" }
+                h1 { class: "text-4xl font-bold mb-4", "Detypstify" }
+            }
+            div { class: "flex align-middle justify-center mb-4",
                 canvas {
                     id: "canvas",
                     class: "border border-gray-700 bg-gray-800",
@@ -38,7 +48,7 @@ fn App() -> Element {
                         // start drawing
                         draw_smiley()
                     },
-                    onmouseup: move |evt| {draw_smiley()},
+                    onmouseup: move |_| {draw_smiley()},
                 }
             }
             div { class: "flex justify-center mb-4",
@@ -55,7 +65,7 @@ fn App() -> Element {
                 }
             }
             label {
-                class: "cursor-pointer bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded",
+                class: "",
                 "Upload Image"
             }
             div { class: "flex justify-center mb-4",
@@ -83,13 +93,12 @@ fn App() -> Element {
                     }
                 }
             }
-            div { id: "links",
+            div {
                 class: "flex justify-center space-x-4",
                 a {
                     target: "_blank",
-                    href: "https://github.com/yourusername",
-                    class: "text-blue-400 hover:underline",
-                    "GitHub"
+                    href: "https://github.com/DieracDelta/detypstify",
+                    i { class: "fa fa-github", }
                 }
             }
         }

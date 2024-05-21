@@ -21,37 +21,24 @@ canvas {
 }
 
 
-
-#links {
-    width: 400px;
-    text-align: left;
-    font-size: x-large;
-    color: white;
-    display: flex;
-    flex-direction: column;
+.fa {
+  padding: 14px;
+  text-decoration: none;
+  margin: 5px 5px;
+  border-radius: 50%;
 }
 
-#links a {
-    color: white;
-    text-decoration: none;
-    margin-top: 20px;
-    margin: 10px;
-    border: white 1px solid;
-    border-radius: 5px;
-    padding: 10px;
+.fa:hover {
+  opacity: 0.7;
 }
 
-#links a:hover {
-    background-color: #1f1f1f;
-    cursor: pointer;
+.fa-linkedin {
+  background: #0077B5;
+  color: white;
 }
 
-input[type="file"] + label {
-    background-color: #3182ce; /* Blue background for button */
-    color: #f7fafc; /* Light text color for button */
-}
-
-input[type="file"] + label:hover {
-    background-color: #2b6cb0; /* Darker blue for hover effect */
+.fa-github {
+  background: black;
+  color: white;
 }
 
