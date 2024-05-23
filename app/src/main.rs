@@ -4,15 +4,28 @@ use std::io::Cursor;
 use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::Arc;
 
+use burn::backend::NdArray;
+use burn_candle::Candle;
 use dioxus::html::input_data::MouseButton;
 pub use model::mnist::Model;
 
 use wasm_bindgen::prelude::*;
 
-use burn::backend::Wgpu;
+use burn_wgpu::{AutoGraphicsApi, Wgpu};
 use dioxus::prelude::*;
 use image::io::Reader as ImageReader;
 use tracing::Level;
+
+
+pub enum ModelType {
+    WithCandleBackend(Model<Candle<f32, i64>>),
+    WithNdArrayBackend(Model<NdArray<f32>>),
+    WithWgpuBackend(Model<Wgpu<AutoGraphicsApi, f32, i32>>),
+}
+
+pub struct ImageClassifier {
+    model: ModelType
+}
 
 // Urls are relative to your Cargo.toml file
 const _TAILWIND_URL: &str = manganis::mg!(file("public/tailwind.css"));
@@ -43,6 +56,8 @@ fn main() {
     // Init logger
     dioxus_logger::init(Level::DEBUG).expect("failed to init logger");
     // type Backend = Wgpu;
+    let device = Default::default();
+    let classifier = ImageClassifier { model: ModelType::WithNdArrayBackend(Model::new(&device))};
     // let device = WgpuDevice::default();
     // let model = Model::default();
     // tracing::debug!("debug");
