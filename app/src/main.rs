@@ -39,6 +39,74 @@ impl Point {
     }
 }
 
+fn set_position(event: MouseEvent, pos: Point) {
+    let coords = event.element_coordinates();
+    pos.x.store(coords.x as u64, Ordering::SeqCst);
+    pos.y.store(coords.y as u64, Ordering::SeqCst);
+}
+
+fn draw(event: MouseEvent, pos: Point) {
+    if event.held_buttons().contains(MouseButton::Primary) {
+        let coords = event.element_coordinates();
+        let canvas = web_sys::window()
+            .unwrap()
+            .document()
+            .unwrap()
+            .get_element_by_id("canvas")
+            .unwrap();
+        let context = canvas
+            .dyn_into::<web_sys::HtmlCanvasElement>()
+            .unwrap()
+            .get_context("2d")
+            .unwrap()
+            .unwrap()
+            .dyn_into::<web_sys::CanvasRenderingContext2d>()
+            .unwrap();
+        context.begin_path();
+        let (x, y) = pos.get_coords();
+        context.move_to(x, y as f64);
+        set_position(event, pos);
+
+        context.line_to(coords.x as f64, coords.y as f64);
+        context.set_stroke_style(&JsValue::from_str("white"));
+        context.set_line_width(5.0);
+        context.stroke();
+    }
+}
+
+fn set_output(name: &str, res: &str) {
+    let out = web_sys::window()
+        .unwrap()
+        .document()
+        .unwrap()
+        .get_element_by_id(name)
+        .unwrap();
+    out.set_text_content(Some(res));
+}
+
+fn clear_outputs() {
+    set_output("out1", "");
+    set_output("out2", "");
+    set_output("out3", "");
+}
+
+#[component]
+fn OutputModel(name: String, res: String) -> Element {
+    rsx! {
+        div {
+            class: "flex justify-left",
+            h1 {
+                class: "text-2xl font-bold ",
+                "{res}"
+            }
+            p {id : "{name}",
+            class: "ml-8 mt-1",
+            ""
+            }
+        }
+    }
+}
+
 fn main() {
     // Init logger
     dioxus_logger::init(Level::DEBUG).expect("failed to init logger");
@@ -62,7 +130,7 @@ fn App() -> Element {
             rel: "stylesheet",
             href: "https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css"
         }
-        section { class: "container",
+        section { class: "container max-w-fit",
             div { id: "header",
                 class: "flex flex-row sticky items-center justify-center z-10",
                 // img { src: "assets/logo.png", class: "w-24 h-24" }
@@ -96,6 +164,7 @@ fn App() -> Element {
                     },
                     onmouseup: move |_| {
                         // TODO: capture the image and run prediction
+                        set_output("out1", "1. 0");
                     },
                     onmousemove: move |event| {
                         draw(event, pos_move.clone())
@@ -115,6 +184,7 @@ fn App() -> Element {
                             .unwrap().get_context("2d").unwrap().unwrap()
                             .dyn_into::<web_sys::CanvasRenderingContext2d>().unwrap();
                         context.clear_rect(0.0, 0.0, 400.0, 300.0);
+                        clear_outputs();
                     },
                     style:"font-family:'0xProto Regular",
                     "Clear"
@@ -146,41 +216,9 @@ fn App() -> Element {
                     }
                 }
             }
+            OutputModel { name: "out1", res: "1." }
+            OutputModel { name: "out2", res: "2." }
+            OutputModel { name: "out3", res: "3." }
         }
-    }
-}
-
-fn set_position(event: MouseEvent, pos: Point) {
-    let coords = event.element_coordinates();
-    pos.x.store(coords.x as u64, Ordering::SeqCst);
-    pos.y.store(coords.y as u64, Ordering::SeqCst);
-}
-
-fn draw(event: MouseEvent, pos: Point) {
-    if event.held_buttons().contains(MouseButton::Primary) {
-        let coords = event.element_coordinates();
-        let canvas = web_sys::window()
-            .unwrap()
-            .document()
-            .unwrap()
-            .get_element_by_id("canvas")
-            .unwrap();
-        let context = canvas
-            .dyn_into::<web_sys::HtmlCanvasElement>()
-            .unwrap()
-            .get_context("2d")
-            .unwrap()
-            .unwrap()
-            .dyn_into::<web_sys::CanvasRenderingContext2d>()
-            .unwrap();
-        context.begin_path();
-        let (x, y) = pos.get_coords();
-        context.move_to(x, y as f64);
-        set_position(event, pos);
-
-        context.line_to(coords.x as f64, coords.y as f64);
-        context.set_stroke_style(&JsValue::from_str("white"));
-        context.set_line_width(5.0);
-        context.stroke();
     }
 }
