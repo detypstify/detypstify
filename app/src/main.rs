@@ -3,20 +3,40 @@ use std::f64;
 use std::io::Cursor;
 use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::Arc;
+use std::time::Instant;
 
+use burn::tensor::Tensor;
+use burn_candle::Candle;
 use dioxus::html::input_data::MouseButton;
 pub use model::mnist::Model;
 
-use wasm_bindgen::prelude::*;
+use wasm_bindgen::{prelude::*, Clamped};
 
-use burn::backend::Wgpu;
+use burn::backend::{NdArray};
 use dioxus::prelude::*;
 use image::io::Reader as ImageReader;
-use tracing::Level;
+use tracing::{debug, Level};
+const HEIGHT: usize = 300;
+const WIDTH: usize = 400;
+const CHANNELS: usize = 3;
+
+// TODO use globals for width and height of canvas
 
 // Urls are relative to your Cargo.toml file
 const _TAILWIND_URL: &str = manganis::mg!(file("public/tailwind.css"));
 
+use burn_wgpu::{AutoGraphicsApi, Wgpu};
+
+pub enum ModelType {
+    WithCandleBackend(Model<Candle<f32, i64>>),
+    WithNdArrayBackend(Model<NdArray<f32>>),
+    WithWgpuBackend(Model<Wgpu<AutoGraphicsApi, f32, i32>>),
+}
+
+pub struct ImageClassifier {
+    model: ModelType
+}
+    //
 #[derive(Debug, Clone)]
 struct Point {
     x: Arc<AtomicU64>,
@@ -45,7 +65,35 @@ fn set_position(event: MouseEvent, pos: Point) {
     pos.y.store(coords.y as u64, Ordering::SeqCst);
 }
 
-fn draw(event: MouseEvent, pos: Point) {
+/// Returns the top 5 classes and convert them into a JsValue
+fn top_5_classes(probabilities: Vec<f32>) -> Vec<InferenceResult> {
+    // Convert the probabilities into a vector of (index, probability)
+    let mut probabilities: Vec<_> = probabilities.iter().enumerate().collect();
+
+    // Sort the probabilities in descending order
+    probabilities.sort_by(|a, b| b.1.partial_cmp(a.1).unwrap());
+
+    // Take the top 5 probabilities
+    probabilities.truncate(5);
+
+    // Convert the probabilities into InferenceResult
+    probabilities
+        .into_iter()
+        .map(|(index, probability)| InferenceResult {
+            index,
+            probability: *probability,
+            label: "todo".to_string()
+        })
+        .collect()
+}
+
+pub struct InferenceResult {
+    index: usize,
+    probability: f32,
+    label: String,
+}
+
+fn draw(event: MouseEvent, pos: Point) -> Option<Clamped<Vec<u8>>> {
     if event.held_buttons().contains(MouseButton::Primary) {
         let coords = event.element_coordinates();
         let canvas = web_sys::window()
@@ -64,13 +112,17 @@ fn draw(event: MouseEvent, pos: Point) {
             .unwrap();
         context.begin_path();
         let (x, y) = pos.get_coords();
-        context.move_to(x, y as f64);
+        context.move_to(x, y);
         set_position(event, pos);
 
-        context.line_to(coords.x as f64, coords.y as f64);
+        context.line_to(coords.x, coords.y);
         context.set_stroke_style(&JsValue::from_str("white"));
         context.set_line_width(5.0);
         context.stroke();
+
+        Some(context.get_image_data(0.0, 0.0, 400.0, 300.0).unwrap().data())
+    } else {
+        None
     }
 }
 
@@ -108,17 +160,53 @@ fn OutputModel(name: String, res: String) -> Element {
 }
 
 fn main() {
-    // Init logger
     dioxus_logger::init(Level::DEBUG).expect("failed to init logger");
-    // type Backend = Wgpu;
-    // let device = WgpuDevice::default();
-    // let model = Model::default();
-    // tracing::debug!("debug");
     launch(App);
+}
+
+fn inference(model: &ImageClassifier, input: &[u8]) {
+    // TODO fix
+    // let mut ints = vec![];
+    // for x in 0..HEIGHT {
+    //     for y in 0..WIDTH {
+    //         let idx = (y * width + x) * channels;
+    //         let r = input[idx] as f32 / 255.0;
+    //         let g = input[idx + 1] as f32 / 255.0;
+    //         let b = input[idx + 2] as f32 / 255.0;
+    //         let gray = 0.2989 * r + 0.5870 * g + 0.1140 * b;
+    //         ints.push(gray);
+    //     }
+    // }
+    //
+    //
+    // let start = Instant::now();
+    // let result = match model.model {
+    //     ModelType::WithCandleBackend(ref model) => {
+    //         let input_tensor = Tensor::from_floats(ints, &Default::default()).reshape([1, CHANNELS, HEIGHT, WIDTH]);
+    //         model.forward(input_tensor);
+    //         todo!()
+    //     },
+    //     ModelType::WithNdArrayBackend(ref model) => {
+    //         let input_tensor = Tensor::from_floats(ints, &Default::default()).reshape([1, CHANNELS, HEIGHT, WIDTH]);
+    //         model.forward(input_tensor);
+    //         todo!()
+    //     },
+    //     ModelType::WithWgpuBackend(ref model) => {
+    //         let input_tensor = Tensor::from_floats(ints, &Default::default()).reshape([1, CHANNELS, HEIGHT, WIDTH]);
+    //         model.forward(input_tensor);
+    //         todo!()
+    //     },
+    // };
+    // let duration = start.elapsed();
+    // debug!("Inference is completed in {:?}", duration);
+    //
+    //
 }
 
 #[component]
 fn App() -> Element {
+    let device = Default::default();
+    let classifier = ImageClassifier { model: ModelType::WithNdArrayBackend(Model::new(&device))};
     let pos = Point::new();
     let pos_down = pos.clone();
     let pos_enter = pos.clone();
@@ -157,7 +245,6 @@ fn App() -> Element {
                     onmousedown:
                     move |evt| {
                       set_position(evt, pos_down.clone());
-
                     },
                     onmouseenter : move |evt| {
                       set_position(evt, pos_enter.clone());
@@ -167,7 +254,13 @@ fn App() -> Element {
                         set_output("out1", "1. 0");
                     },
                     onmousemove: move |event| {
-                        draw(event, pos_move.clone())
+                        let maybe_canvas = draw(event, pos_move.clone());
+                        if let Some(cv) = maybe_canvas {
+                            use std::ops::Deref;
+                            let cv2 : &[u8] = cv.deref();
+                            inference(&classifier, cv2);
+                        }
+
                     },
                 }
             }

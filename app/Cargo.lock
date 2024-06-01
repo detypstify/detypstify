@@ -86,8 +86,10 @@ checksum = "d301b3b94cb4b2f23d7917810addbbaff90738e0ca2be692bd027e70d7e0330c"
 name = "app"
 version = "0.1.0"
 dependencies = [
- "burn",
+ "burn 0.15.0",
+ "burn-candle 0.15.0",
  "burn-import",
+ "burn-wgpu 0.15.0",
  "dioxus",
  "dioxus-logger",
  "image 0.25.1",
@@ -103,6 +105,9 @@ name = "arbitrary"
 version = "1.3.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "7d5a26814d8dcb93b0e5a0ff3c6d80a8843bafb21b39e8e18a6f05471870e110"
+dependencies = [
+ "derive_arbitrary",
+]
 
 [[package]]
 name = "arg_enum_proc_macro"
@@ -345,8 +350,16 @@ version = "0.13.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "3960b57a6ad4baf54d1dba766965e4559c4b9a8f391107fee5de29db57265840"
 dependencies = [
- "burn-core",
+ "burn-core 0.13.2",
  "burn-train",
+]
+
+[[package]]
+name = "burn"
+version = "0.15.0"
+source = "git+https://github.com/DieracDelta/burn.git?branch=jr/fix_default#58e56a586c07696c8ad05f0b3fa931a9c09d1c72"
+dependencies = [
+ "burn-core 0.15.0",
 ]
 
 [[package]]
@@ -355,8 +368,8 @@ version = "0.13.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "cf9479c28bdce3f2b1541f0a9215628f6256b5f3d66871192a3c56d55171d28e"
 dependencies = [
- "burn-common",
- "burn-tensor",
+ "burn-common 0.13.2",
+ "burn-tensor 0.13.2",
  "derive-new",
  "log",
  "spin",
@@ -368,8 +381,19 @@ version = "0.13.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "d811c54fa6d9beb38808a1aabd9515c39090720cae572d54f25c041b1702e8fd"
 dependencies = [
- "burn-tensor",
- "candle-core",
+ "burn-tensor 0.13.2",
+ "candle-core 0.4.1",
+ "derive-new",
+ "half",
+]
+
+[[package]]
+name = "burn-candle"
+version = "0.15.0"
+source = "git+https://github.com/DieracDelta/burn.git?branch=jr/fix_default#58e56a586c07696c8ad05f0b3fa931a9c09d1c72"
+dependencies = [
+ "burn-tensor 0.15.0",
+ "candle-core 0.5.1",
  "derive-new",
  "half",
 ]
@@ -391,12 +415,44 @@ dependencies = [
 ]
 
 [[package]]
+name = "burn-common"
+version = "0.15.0"
+source = "git+https://github.com/DieracDelta/burn.git?branch=jr/fix_default#58e56a586c07696c8ad05f0b3fa931a9c09d1c72"
+dependencies = [
+ "async-trait",
+ "derive-new",
+ "getrandom",
+ "rand",
+ "serde",
+ "spin",
+ "uuid",
+ "web-time",
+]
+
+[[package]]
 name = "burn-compute"
 version = "0.13.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "3e890d8999b25a1a090c2afe198243fc79f0a299efb531a4871c084b0ab9fa11"
 dependencies = [
- "burn-common",
+ "burn-common 0.13.2",
+ "derive-new",
+ "dirs",
+ "hashbrown 0.14.5",
+ "log",
+ "md5",
+ "serde",
+ "serde_json",
+ "spin",
+ "web-time",
+]
+
+[[package]]
+name = "burn-compute"
+version = "0.15.0"
+source = "git+https://github.com/DieracDelta/burn.git?branch=jr/fix_default#58e56a586c07696c8ad05f0b3fa931a9c09d1c72"
+dependencies = [
+ "burn-common 0.15.0",
  "derive-new",
  "dirs",
  "hashbrown 0.14.5",
@@ -416,14 +472,14 @@ checksum = "8af6bc0afe55a57ff0b08f52302df4e3d09f96805a4f1e15c521f1082cb02b4f"
 dependencies = [
  "bincode 2.0.0-rc.3",
  "burn-autodiff",
- "burn-candle",
- "burn-common",
+ "burn-candle 0.13.2",
+ "burn-common 0.13.2",
  "burn-dataset",
- "burn-derive",
- "burn-ndarray",
+ "burn-derive 0.13.2",
+ "burn-ndarray 0.13.2",
  "burn-tch",
- "burn-tensor",
- "burn-wgpu",
+ "burn-tensor 0.13.2",
+ "burn-wgpu 0.13.2",
  "derive-new",
  "flate2",
  "half",
@@ -437,6 +493,52 @@ dependencies = [
  "serde_json",
  "spin",
  "thiserror",
+]
+
+[[package]]
+name = "burn-core"
+version = "0.15.0"
+source = "git+https://github.com/DieracDelta/burn.git?branch=jr/fix_default#58e56a586c07696c8ad05f0b3fa931a9c09d1c72"
+dependencies = [
+ "bincode 2.0.0-rc.3",
+ "burn-common 0.15.0",
+ "burn-derive 0.15.0",
+ "burn-ndarray 0.15.0",
+ "burn-tensor 0.15.0",
+ "derive-new",
+ "half",
+ "hashbrown 0.14.5",
+ "num-traits",
+ "rand",
+ "serde",
+ "serde_json",
+ "spin",
+]
+
+[[package]]
+name = "burn-cube"
+version = "0.15.0"
+source = "git+https://github.com/DieracDelta/burn.git?branch=jr/fix_default#58e56a586c07696c8ad05f0b3fa931a9c09d1c72"
+dependencies = [
+ "burn-compute 0.15.0",
+ "burn-cube-macros",
+ "burn-tensor 0.15.0",
+ "bytemuck",
+ "derive-new",
+ "half",
+ "log",
+ "serde",
+]
+
+[[package]]
+name = "burn-cube-macros"
+version = "0.15.0"
+source = "git+https://github.com/DieracDelta/burn.git?branch=jr/fix_default#58e56a586c07696c8ad05f0b3fa931a9c09d1c72"
+dependencies = [
+ "derive-new",
+ "proc-macro2",
+ "quote",
+ "syn 2.0.65",
 ]
 
 [[package]]
@@ -478,13 +580,24 @@ dependencies = [
 ]
 
 [[package]]
+name = "burn-derive"
+version = "0.15.0"
+source = "git+https://github.com/DieracDelta/burn.git?branch=jr/fix_default#58e56a586c07696c8ad05f0b3fa931a9c09d1c72"
+dependencies = [
+ "derive-new",
+ "proc-macro2",
+ "quote",
+ "syn 2.0.65",
+]
+
+[[package]]
 name = "burn-fusion"
 version = "0.13.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "8d77b882d131a67d15f91b915fb3e0a5add73547e7352310d33c877fbe77c79e"
 dependencies = [
- "burn-common",
- "burn-tensor",
+ "burn-common 0.13.2",
+ "burn-tensor 0.13.2",
  "derive-new",
  "hashbrown 0.14.5",
  "log",
@@ -498,9 +611,9 @@ version = "0.13.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "9c4a36a28e4307a830b32b7c51f5351725a95fe953c6223617e5e13a002b0ec5"
 dependencies = [
- "burn",
+ "burn 0.13.2",
  "bytemuck",
- "candle-core",
+ "candle-core 0.4.1",
  "derive-new",
  "half",
  "log",
@@ -518,7 +631,7 @@ dependencies = [
  "thiserror",
  "tracing-core",
  "tracing-subscriber",
- "zip",
+ "zip 0.6.6",
 ]
 
 [[package]]
@@ -527,12 +640,33 @@ version = "0.13.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "0cb62a93030a690c329b95c01b43e3064a4bd36031e9111d537641d36e42f3ac"
 dependencies = [
- "burn-common",
- "burn-compute",
+ "burn-common 0.13.2",
+ "burn-compute 0.13.2",
  "burn-fusion",
- "burn-tensor",
+ "burn-tensor 0.13.2",
  "bytemuck",
  "derive-new",
+ "hashbrown 0.14.5",
+ "log",
+ "num-traits",
+ "rand",
+ "serde",
+ "spin",
+ "text_placeholder",
+]
+
+[[package]]
+name = "burn-jit"
+version = "0.15.0"
+source = "git+https://github.com/DieracDelta/burn.git?branch=jr/fix_default#58e56a586c07696c8ad05f0b3fa931a9c09d1c72"
+dependencies = [
+ "burn-common 0.15.0",
+ "burn-compute 0.15.0",
+ "burn-cube",
+ "burn-tensor 0.15.0",
+ "bytemuck",
+ "derive-new",
+ "half",
  "hashbrown 0.14.5",
  "log",
  "num-traits",
@@ -549,8 +683,8 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "05f40bb0b5938937a721045752f1ec1baee8a873429fd17e6e6f2155c6cdf33a"
 dependencies = [
  "burn-autodiff",
- "burn-common",
- "burn-tensor",
+ "burn-common 0.13.2",
+ "burn-tensor 0.13.2",
  "derive-new",
  "libm",
  "matrixmultiply",
@@ -562,12 +696,28 @@ dependencies = [
 ]
 
 [[package]]
+name = "burn-ndarray"
+version = "0.15.0"
+source = "git+https://github.com/DieracDelta/burn.git?branch=jr/fix_default#58e56a586c07696c8ad05f0b3fa931a9c09d1c72"
+dependencies = [
+ "burn-common 0.15.0",
+ "burn-tensor 0.15.0",
+ "derive-new",
+ "libm",
+ "matrixmultiply",
+ "ndarray",
+ "num-traits",
+ "rand",
+ "spin",
+]
+
+[[package]]
 name = "burn-tch"
 version = "0.13.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "8cb9c2b547499a3d990e93b950965b9a478edfec4a7bf98d5d4412ff8c897129"
 dependencies = [
- "burn-tensor",
+ "burn-tensor 0.13.2",
  "half",
  "libc",
  "rand",
@@ -580,7 +730,22 @@ version = "0.13.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "bfa19c21f54e1a189be3bbaec45efafdf1c89b2763710b381c9f32ae25e7dbe8"
 dependencies = [
- "burn-common",
+ "burn-common 0.13.2",
+ "derive-new",
+ "half",
+ "hashbrown 0.14.5",
+ "num-traits",
+ "rand",
+ "rand_distr",
+ "serde",
+]
+
+[[package]]
+name = "burn-tensor"
+version = "0.15.0"
+source = "git+https://github.com/DieracDelta/burn.git?branch=jr/fix_default#58e56a586c07696c8ad05f0b3fa931a9c09d1c72"
+dependencies = [
+ "burn-common 0.15.0",
  "derive-new",
  "half",
  "hashbrown 0.14.5",
@@ -596,7 +761,7 @@ version = "0.13.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "0a0014ee82ef967bd82dda378cfaf340f255c39c729e29ac3bc65d3107e4c7ee"
 dependencies = [
- "burn-core",
+ "burn-core 0.13.2",
  "crossterm",
  "derive-new",
  "log",
@@ -616,18 +781,37 @@ version = "0.13.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "1575890471123109c6aeb725c52ac649fa9e0013e2303f57dc534d5e0cb857e5"
 dependencies = [
- "burn-common",
- "burn-compute",
+ "burn-common 0.13.2",
+ "burn-compute 0.13.2",
  "burn-fusion",
- "burn-jit",
- "burn-tensor",
+ "burn-jit 0.13.2",
+ "burn-tensor 0.13.2",
  "bytemuck",
  "derive-new",
  "futures-intrusive",
  "hashbrown 0.14.5",
  "log",
  "pollster",
- "wgpu",
+ "wgpu 0.19.4",
+]
+
+[[package]]
+name = "burn-wgpu"
+version = "0.15.0"
+source = "git+https://github.com/DieracDelta/burn.git?branch=jr/fix_default#58e56a586c07696c8ad05f0b3fa931a9c09d1c72"
+dependencies = [
+ "burn-common 0.15.0",
+ "burn-compute 0.15.0",
+ "burn-cube",
+ "burn-jit 0.15.0",
+ "burn-tensor 0.15.0",
+ "bytemuck",
+ "derive-new",
+ "futures-intrusive",
+ "hashbrown 0.14.5",
+ "log",
+ "pollster",
+ "wgpu 0.20.0",
 ]
 
 [[package]]
@@ -722,7 +906,27 @@ dependencies = [
  "safetensors 0.4.3",
  "thiserror",
  "yoke",
- "zip",
+ "zip 0.6.6",
+]
+
+[[package]]
+name = "candle-core"
+version = "0.5.1"
+source = "git+https://github.com/huggingface/candle.git?rev=82b641f#82b641fd2752e3b14db6a9c91faef70e3329f3b5"
+dependencies = [
+ "byteorder",
+ "gemm",
+ "half",
+ "memmap2",
+ "num-traits",
+ "num_cpus",
+ "rand",
+ "rand_distr",
+ "rayon",
+ "safetensors 0.4.3",
+ "thiserror",
+ "yoke",
+ "zip 1.1.4",
 ]
 
 [[package]]
@@ -1095,6 +1299,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "d3d12"
+version = "0.20.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "b28bfe653d79bd16c77f659305b195b82bb5ce0c0eb2a4846b82ddbd77586813"
+dependencies = [
+ "bitflags 2.5.0",
+ "libloading 0.7.4",
+ "winapi",
+]
+
+[[package]]
 name = "darling"
 version = "0.20.9"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1156,6 +1371,17 @@ name = "derive-new"
 version = "0.6.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "d150dea618e920167e5973d70ae6ece4385b7164e0d799fe7c122dd0a5d912ad"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn 2.0.65",
+]
+
+[[package]]
+name = "derive_arbitrary"
+version = "1.3.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "67e77553c4162a157adbf834ebae5b415acbecbeafc7a74b0e886657506a7611"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -1499,6 +1725,26 @@ dependencies = [
  "option-ext",
  "redox_users",
  "windows-sys 0.48.0",
+]
+
+[[package]]
+name = "displaydoc"
+version = "0.2.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "487585f4d0c6655fe74905e2504d8ad6908e4db67f744eb140876906c2f3175d"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn 2.0.65",
+]
+
+[[package]]
+name = "document-features"
+version = "0.2.8"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "ef5282ad69563b5fc40319526ba27e0e7363d552a896f0297d54f767717f9b95"
+dependencies = [
+ "litrs",
 ]
 
 [[package]]
@@ -2360,7 +2606,18 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "cc11df1ace8e7e564511f53af41f3e42ddc95b56fd07b3f4445d2a6048bc682c"
 dependencies = [
  "bitflags 2.5.0",
- "gpu-descriptor-types",
+ "gpu-descriptor-types 0.1.2",
+ "hashbrown 0.14.5",
+]
+
+[[package]]
+name = "gpu-descriptor"
+version = "0.3.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "9c08c1f623a8d0b722b8b99f821eb0ba672a1618f0d3b16ddbee1cedd2dd8557"
+dependencies = [
+ "bitflags 2.5.0",
+ "gpu-descriptor-types 0.2.0",
  "hashbrown 0.14.5",
 ]
 
@@ -2369,6 +2626,15 @@ name = "gpu-descriptor-types"
 version = "0.1.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "6bf0b36e6f090b7e1d8a4b49c0cb81c1f8376f72198c65dd3ad9ff3556b8b78c"
+dependencies = [
+ "bitflags 2.5.0",
+]
+
+[[package]]
+name = "gpu-descriptor-types"
+version = "0.2.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "fdf242682df893b86f33a73828fb09ca4b2d3bb6cc95249707fc684d27484b91"
 dependencies = [
  "bitflags 2.5.0",
 ]
@@ -2923,6 +3189,12 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "78b3ae25bc7c8c38cec158d1f2757ee79e9b3740fbc7ccf0e59e4b08d793fa89"
 
 [[package]]
+name = "litrs"
+version = "0.4.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "b4ce301924b7887e9d637144fdade93f9dfff9b60981d4ac161db09720d39aa5"
+
+[[package]]
 name = "lock_api"
 version = "0.4.12"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3072,6 +3344,21 @@ dependencies = [
 ]
 
 [[package]]
+name = "metal"
+version = "0.28.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "5637e166ea14be6063a3f8ba5ccb9a4159df7d8f6d61c02fc3d480b1f90dcfcb"
+dependencies = [
+ "bitflags 2.5.0",
+ "block",
+ "core-graphics-types",
+ "foreign-types 0.5.0",
+ "log",
+ "objc",
+ "paste",
+]
+
+[[package]]
 name = "mime"
 version = "0.3.17"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3111,6 +3398,27 @@ version = "0.19.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "50e3524642f53d9af419ab5e8dd29d3ba155708267667c2f3f06c88c9e130843"
 dependencies = [
+ "bit-set",
+ "bitflags 2.5.0",
+ "codespan-reporting",
+ "hexf-parse",
+ "indexmap 2.2.6",
+ "log",
+ "num-traits",
+ "rustc-hash",
+ "spirv",
+ "termcolor",
+ "thiserror",
+ "unicode-xid",
+]
+
+[[package]]
+name = "naga"
+version = "0.20.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e536ae46fcab0876853bd4a632ede5df4b1c2527a58f6c5a4150fe86be858231"
+dependencies = [
+ "arrayvec",
  "bit-set",
  "bitflags 2.5.0",
  "codespan-reporting",
@@ -3282,6 +3590,27 @@ checksum = "4161fcb6d602d4d2081af7c3a45852d875a03dd337a6bfdd6e06407b61342a43"
 dependencies = [
  "hermit-abi",
  "libc",
+]
+
+[[package]]
+name = "num_enum"
+version = "0.7.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "02339744ee7253741199f897151b38e72257d13802d4ee837285cc2990a90845"
+dependencies = [
+ "num_enum_derive",
+]
+
+[[package]]
+name = "num_enum_derive"
+version = "0.7.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "681030a937600a36906c185595136d26abfebb4aa9c65701cefcaf8578bb982b"
+dependencies = [
+ "proc-macro-crate",
+ "proc-macro2",
+ "quote",
+ "syn 2.0.65",
 ]
 
 [[package]]
@@ -3583,6 +3912,15 @@ checksum = "5f12335488a2f3b0a83b14edad48dca9879ce89b2edd10e80237e4e852dd645e"
 dependencies = [
  "proc-macro2",
  "syn 2.0.65",
+]
+
+[[package]]
+name = "proc-macro-crate"
+version = "3.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "6d37c51ca738a55da99dc0c4a34860fd675453b8b36209178c2249bb13651284"
+dependencies = [
+ "toml_edit 0.21.1",
 ]
 
 [[package]]
@@ -4764,7 +5102,7 @@ dependencies = [
  "safetensors 0.3.3",
  "thiserror",
  "torch-sys",
- "zip",
+ "zip 0.6.6",
 ]
 
 [[package]]
@@ -4989,6 +5327,17 @@ dependencies = [
 
 [[package]]
 name = "toml_edit"
+version = "0.21.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "6a8534fd7f78b5405e860340ad6575217ce99f38d4d5c8f2442cb5ecb50090e1"
+dependencies = [
+ "indexmap 2.2.6",
+ "toml_datetime",
+ "winnow 0.5.40",
+]
+
+[[package]]
+name = "toml_edit"
 version = "0.22.13"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "c127785850e8c20836d49732ae6abfa47616e60bf9d9f57c43c250361a9db96c"
@@ -5012,7 +5361,7 @@ dependencies = [
  "serde",
  "serde_json",
  "ureq",
- "zip",
+ "zip 0.6.6",
 ]
 
 [[package]]
@@ -5390,7 +5739,7 @@ dependencies = [
  "cfg_aliases",
  "js-sys",
  "log",
- "naga",
+ "naga 0.19.2",
  "parking_lot",
  "profiling",
  "raw-window-handle",
@@ -5399,9 +5748,35 @@ dependencies = [
  "wasm-bindgen",
  "wasm-bindgen-futures",
  "web-sys",
- "wgpu-core",
- "wgpu-hal",
- "wgpu-types",
+ "wgpu-core 0.19.4",
+ "wgpu-hal 0.19.4",
+ "wgpu-types 0.19.2",
+]
+
+[[package]]
+name = "wgpu"
+version = "0.20.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "32ff1bfee408e1028e2e3acbf6d32d98b08a5a059ccbf5f33305534453ba5d3e"
+dependencies = [
+ "arrayvec",
+ "cfg-if",
+ "cfg_aliases",
+ "document-features",
+ "js-sys",
+ "log",
+ "naga 0.20.0",
+ "parking_lot",
+ "profiling",
+ "raw-window-handle",
+ "smallvec",
+ "static_assertions",
+ "wasm-bindgen",
+ "wasm-bindgen-futures",
+ "web-sys",
+ "wgpu-core 0.20.0",
+ "wgpu-hal 0.20.0",
+ "wgpu-types 0.20.0",
 ]
 
 [[package]]
@@ -5417,7 +5792,7 @@ dependencies = [
  "codespan-reporting",
  "indexmap 2.2.6",
  "log",
- "naga",
+ "naga 0.19.2",
  "once_cell",
  "parking_lot",
  "profiling",
@@ -5426,8 +5801,35 @@ dependencies = [
  "smallvec",
  "thiserror",
  "web-sys",
- "wgpu-hal",
- "wgpu-types",
+ "wgpu-hal 0.19.4",
+ "wgpu-types 0.19.2",
+]
+
+[[package]]
+name = "wgpu-core"
+version = "0.20.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "ac6a86eaa5e763e59c73cf9e97d55fffd4dfda69fd8bda19589fcf851ddfef1f"
+dependencies = [
+ "arrayvec",
+ "bit-vec",
+ "bitflags 2.5.0",
+ "cfg_aliases",
+ "codespan-reporting",
+ "document-features",
+ "indexmap 2.2.6",
+ "log",
+ "naga 0.20.0",
+ "once_cell",
+ "parking_lot",
+ "profiling",
+ "raw-window-handle",
+ "rustc-hash",
+ "smallvec",
+ "thiserror",
+ "web-sys",
+ "wgpu-hal 0.20.0",
+ "wgpu-types 0.20.0",
 ]
 
 [[package]]
@@ -5444,20 +5846,20 @@ dependencies = [
  "block",
  "cfg_aliases",
  "core-graphics-types",
- "d3d12",
+ "d3d12 0.19.0",
  "glow",
  "glutin_wgl_sys",
  "gpu-alloc",
  "gpu-allocator",
- "gpu-descriptor",
+ "gpu-descriptor 0.2.4",
  "hassle-rs",
  "js-sys",
  "khronos-egl",
  "libc",
  "libloading 0.8.3",
  "log",
- "metal",
- "naga",
+ "metal 0.27.0",
+ "naga 0.19.2",
  "ndk-sys",
  "objc",
  "once_cell",
@@ -5471,7 +5873,52 @@ dependencies = [
  "thiserror",
  "wasm-bindgen",
  "web-sys",
- "wgpu-types",
+ "wgpu-types 0.19.2",
+ "winapi",
+]
+
+[[package]]
+name = "wgpu-hal"
+version = "0.20.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "4d71c8ae05170583049b65ee562fd839fdc0b3e9ddb84f4e40c9d5f8ea0d4c8c"
+dependencies = [
+ "android_system_properties",
+ "arrayvec",
+ "ash",
+ "bit-set",
+ "bitflags 2.5.0",
+ "block",
+ "cfg_aliases",
+ "core-graphics-types",
+ "d3d12 0.20.0",
+ "glow",
+ "glutin_wgl_sys",
+ "gpu-alloc",
+ "gpu-allocator",
+ "gpu-descriptor 0.3.0",
+ "hassle-rs",
+ "js-sys",
+ "khronos-egl",
+ "libc",
+ "libloading 0.7.4",
+ "log",
+ "metal 0.28.0",
+ "naga 0.20.0",
+ "ndk-sys",
+ "objc",
+ "once_cell",
+ "parking_lot",
+ "profiling",
+ "range-alloc",
+ "raw-window-handle",
+ "renderdoc-sys",
+ "rustc-hash",
+ "smallvec",
+ "thiserror",
+ "wasm-bindgen",
+ "web-sys",
+ "wgpu-types 0.20.0",
  "winapi",
 ]
 
@@ -5480,6 +5927,17 @@ name = "wgpu-types"
 version = "0.19.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "b671ff9fb03f78b46ff176494ee1ebe7d603393f42664be55b64dc8d53969805"
+dependencies = [
+ "bitflags 2.5.0",
+ "js-sys",
+ "web-sys",
+]
+
+[[package]]
+name = "wgpu-types"
+version = "0.20.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "1353d9a46bff7f955a680577f34c69122628cc2076e1d6f3a9be6ef00ae793ef"
 dependencies = [
  "bitflags 2.5.0",
  "js-sys",
@@ -5834,6 +6292,21 @@ dependencies = [
  "sha1",
  "time",
  "zstd",
+]
+
+[[package]]
+name = "zip"
+version = "1.1.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "9cc23c04387f4da0374be4533ad1208cbb091d5c11d070dfef13676ad6497164"
+dependencies = [
+ "arbitrary",
+ "crc32fast",
+ "crossbeam-utils",
+ "displaydoc",
+ "indexmap 2.2.6",
+ "num_enum",
+ "thiserror",
 ]
 
 [[package]]
