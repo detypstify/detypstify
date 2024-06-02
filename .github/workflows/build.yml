@@ -30,6 +30,7 @@ jobs:
         # git apply .github/patch
         cd app
         nix develop -c dx build --release
+        mv dist/detypstify/* dist/
     - uses: crazy-max/ghaction-github-pages@v4
       if: github.ref == 'refs/heads/main'
       with:
