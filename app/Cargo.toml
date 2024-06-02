@@ -21,6 +21,18 @@ tracing = "0.1.40"
 dioxus-logger = "0.5.0"
 manganis = "0.2.2"
 
+# deps to compile typst to image to display
+# TODO we may want to hide these behind a feature flag eventually
+typst = "0.11.1"
+typst-pdf = "0.11.1"
+typst-svg = "0.11.1"
+comemo = "0.4.0"
+zune-inflate = {version = "0.2.54", default_features = false, features = ["gzip", "std"]}
+tar = "0.4"
+time = "0.3.36"
+ttf-parser = "0.21.1"
+typst-assets = {version = "0.11.1", features = ["fonts"]}
+
 [build-dependencies]
 burn-import = "0.13.0"
 
@@ -32,5 +44,7 @@ features = [
   'Element',
   'HtmlCanvasElement',
   'Window',
-  'ImageData'
+  'ImageData',
+  'BlobPropertyBag',
+  'Url',
 ]

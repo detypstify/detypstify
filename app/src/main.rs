@@ -1,4 +1,6 @@
 pub mod model;
+pub mod typst;
+pub mod typst_execute;
 use std::f64;
 use std::io::Cursor;
 use std::sync::atomic::{AtomicU64, Ordering};
@@ -24,8 +26,14 @@ const CHANNELS: usize = 3;
 
 // Urls are relative to your Cargo.toml file
 const _TAILWIND_URL: &str = manganis::mg!(file("public/tailwind.css"));
+// const FONT: &[u8] = include_bytes!("../public/font.ttf");
+// const FONT: &str = manganis::mg!(file("public/TheanoModern-Regular.ttf"));
+
+// const FONT: &str = manganis::mg!(font().families(["Roboto"]));
 
 use burn_wgpu::{AutoGraphicsApi, Wgpu};
+
+use crate::typst_execute::create_svg;
 
 pub enum ModelType {
     WithCandleBackend(Model<Candle<f32, i64>>),
@@ -143,18 +151,23 @@ fn clear_outputs() {
 }
 
 #[component]
-fn OutputModel(name: String, res: String) -> Element {
+fn OutputModel(name: String, num: String, formula: String) -> Element {
+    let formula_bin = create_svg(formula);
     rsx! {
         div {
             class: "flex justify-left",
             h1 {
                 class: "text-2xl font-bold ",
-                "{res}"
+                "{num}",
             }
-            p {id : "{name}",
-            class: "ml-8 mt-1",
-            ""
-            }
+            p {
+                id : "{name}",
+                class: "ml-8 mt-1",
+                ""
+            },
+            img {
+                src: "{formula_bin}"
+            },
         }
     }
 }
@@ -309,9 +322,9 @@ fn App() -> Element {
                     }
                 }
             }
-            OutputModel { name: "out1", res: "1." }
-            OutputModel { name: "out2", res: "2." }
-            OutputModel { name: "out3", res: "3." }
+            OutputModel { name: "out1", num: "1.", formula: "" }
+            OutputModel { name: "out2", num: "2." , formula: ""}
+            OutputModel { name: "out3", num: "3." , formula: ""}
         }
     }
 }
