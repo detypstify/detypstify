@@ -33,6 +33,11 @@ time = "0.3.36"
 ttf-parser = "0.21.1"
 typst-assets = {version = "0.11.1", features = ["fonts"]}
 
+# sanity check
+wasm-bindgen-rayon = "1.2.1"
+rayon = "1.10.0"
+
+
 [build-dependencies]
 burn-import = "0.13.0"
 

@@ -19,10 +19,16 @@
   outputs = inputs@{ self, nixpkgs, utils, fenix}:
     utils.lib.eachDefaultSystem (system:
     let
-        fenixStable = with fenix.packages.${system}; combine [
-            (stable.withComponents [ "cargo" "clippy" "rust-src" "rustc" "rustfmt" "llvm-tools-preview" ])
-            targets.wasm32-unknown-unknown.stable.rust-std
+        fenixNightly = with fenix.packages.${system}; combine [
+            (latest.withComponents [ "cargo" "clippy" "rust-src" "rustc" "rustfmt" "llvm-tools-preview" ])
+            targets.wasm32-unknown-unknown.latest.rust-std
           ];
+
+        # this doesn't work, presumably due to poor parsing by fenix
+        # fenixNightly = with fenix.packages.${system}; fromToolchainFile {
+        #   file = ./app/rust-toolchain.toml;
+        #   sha256 = "sha256-7ALcOGCO06DEUjT65tyFwTVf4aNAtI7t9KlU+bLdNIY=";
+        # };
         # overlaid = final: prev:
         #   {
         #   };
@@ -62,7 +68,7 @@
                 typst
                 pandoc
                 wasm-bindgen-cli
-                fenixStable
+                fenixNightly
                 # fenix.packages.${system}.rust-analyzer
                 just
                 cargo-expand

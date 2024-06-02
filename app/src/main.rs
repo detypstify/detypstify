@@ -4,7 +4,7 @@ pub mod typst_execute;
 use std::f64;
 use std::io::Cursor;
 use std::sync::atomic::{AtomicU64, Ordering};
-use std::sync::Arc;
+use std::sync::{Arc, Mutex};
 use std::time::Instant;
 
 use burn::tensor::Tensor;
@@ -12,6 +12,8 @@ use burn_candle::Candle;
 use dioxus::html::input_data::MouseButton;
 pub use model::mnist::Model;
 
+use rayon::iter::{IntoParallelIterator, ParallelIterator};
+use rayon::ThreadPoolBuilder;
 use wasm_bindgen::{prelude::*, Clamped};
 
 use burn::backend::{NdArray};
@@ -174,6 +176,7 @@ fn OutputModel(name: String, num: String, formula: String) -> Element {
 
 fn main() {
     dioxus_logger::init(Level::DEBUG).expect("failed to init logger");
+    poc_rayon();
     launch(App);
 }
 
@@ -284,6 +287,7 @@ fn App() -> Element {
                     tabindex: "0",
                     id: "btn",
                     onclick: move |_| {
+                        poc_rayon();
                         let canvas = web_sys::window().unwrap().document().unwrap()
                             .get_element_by_id("canvas").unwrap();
                         let context = canvas.dyn_into::<web_sys::HtmlCanvasElement>()
@@ -327,4 +331,22 @@ fn App() -> Element {
             OutputModel { name: "out3", num: "3." , formula: ""}
         }
     }
+}
+
+pub fn poc_rayon() {
+    init_thread_pool(); // Initialize the thread pool for WebAssembly
+
+    rayon::scope(|s| {
+        for i in 1..=5 {
+            s.spawn(|_| {
+                println!("Number: {}", i);
+            });
+        }
+    });
+
+    // Since wasm-bindgen doesn't support querying the number of threads directly,
+    // you might need to handle this differently or assume the pool size.
+    println!("Number of threads used: assumed based on setup");
+
+    Ok(())
 }
