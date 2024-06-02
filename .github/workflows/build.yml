@@ -27,6 +27,7 @@ jobs:
     - run: |
         nix build . -L
     - run: |
+        git apply .github/patch
         cd app
         nix develop -c dx build --release
     - uses: crazy-max/ghaction-github-pages@v4

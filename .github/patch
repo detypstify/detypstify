@@ -1,0 +1,13 @@
+diff --git a/app/Dioxus.toml b/app/Dioxus.toml
+index 3d29410..6646433 100644
+--- a/app/Dioxus.toml
++++ b/app/Dioxus.toml
+@@ -17,7 +17,7 @@ asset_dir = "public"
+ 
+ # HTML title tag content
+ title = "Detypstify"
+-# base_path = "detypstify"
++base_path = "detypstify"
+ 
+ [web.watcher]
+ 
