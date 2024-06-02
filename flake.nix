@@ -54,7 +54,7 @@
             buildInputs =
               with pkgs; [
                 python3
-                dioxus-cli
+                # dioxus-cli
                 ninja
                 pkg-config
                 libtorch-bin

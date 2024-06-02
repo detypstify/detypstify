@@ -29,8 +29,9 @@ jobs:
     - run: |
         # git apply .github/patch
         cd app
-        nix develop -c dx build --release
-        mv dist/detypstify/* dist/
+        nix develop -c cargo install --git https://github.com/DioxusLabs/dioxus dioxus-cli
+        nix develop -c /root/.cargo/bin/dx build --release
+        # mv dist/detypstify/* dist/
     - uses: crazy-max/ghaction-github-pages@v4
       if: github.ref == 'refs/heads/main'
       with:
