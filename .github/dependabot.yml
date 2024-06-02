@@ -7,11 +7,11 @@ updates:
       interval: "weekly"
     commit-message:
       prefix: "update"
-    group:
-      name: "all-dependencies"
-      package-rules:
-        - match:
-            dependency-type: "all"
+    groups:
+      all:
+        patterns: ["*"]
+    allow:
+      - dependency-type: "all"
 
   - package-ecosystem: "github-actions"
     directory: "/"
@@ -19,9 +19,6 @@ updates:
       interval: "weekly"
     commit-message:
       prefix: "update"
-    group:
-      name: "all-dependencies"
-      package-rules:
-        - match:
-            dependency-type: "all"
-
+    groups:
+      all:
+        patterns: ["*"]
