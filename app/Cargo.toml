@@ -8,7 +8,7 @@ edition = "2021"
 
 [dependencies]
 
-dioxus = { version = "0.5", features = ["web"] }
+dioxus = { version = "0.5.1", features = ["web"] }
 burn = { git = "https://github.com/DieracDelta/burn.git", branch = "jr/fix_default", features = ["ndarray"], default-features=false }
 burn-wgpu = { git = "https://github.com/DieracDelta/burn.git", branch = "jr/fix_default", default-features = false}
 burn-candle = { git = "https://github.com/DieracDelta/burn.git", branch = "jr/fix_default", default-features = false}

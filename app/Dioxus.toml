@@ -11,13 +11,13 @@ default_platform = "web"
 out_dir = "dist"
 
 # resource (assets) file folder
-asset_dir = "public"
+asset_dir = "public/"
 
 [web.app]
 
 # HTML title tag content
 title = "Detypstify"
-base_path = "detypstify"
+base_path = "detypstify/"
 
 [web.watcher]
 
@@ -30,7 +30,7 @@ watch_path = ["src", "public"]
 # include `assets` in web platform
 [web.resource]
 
-style = ["./tailwind.css", "./main.css"]
+style = ["./tailwind.css", "./main.css" ] # , "./tailwindcss7b3e5b8fafb8d3a6.css"]
 
 # Javascript code file
 script = []
