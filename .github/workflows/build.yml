@@ -31,6 +31,7 @@ jobs:
         cd app
         nix develop -c dx build --release
     - uses: crazy-max/ghaction-github-pages@v4
+      if: github.ref == 'refs/heads/main'
       with:
         target_branch: gh-pages
         build_dir: ./app/dist
