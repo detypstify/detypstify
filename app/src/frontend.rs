@@ -6,7 +6,8 @@ use std::sync::Arc;
 use dioxus::prelude::*;
 use wasm_bindgen::{prelude::*, Clamped};
 
-use crate::{inference, ImageClassifier, Model, ModelType};
+use crate::inference::{inference, ImageClassifier, ModelType};
+use crate::model::mnist::Model;
 
 #[component]
 pub(crate) fn App() -> Element {
