@@ -1,9 +1,9 @@
 use crate::model::mnist::Model;
 use burn_wgpu::{AutoGraphicsApi, Wgpu};
 
+use burn::backend::NdArray;
 use burn::tensor::Tensor;
 use burn_candle::Candle;
-use burn::backend::{NdArray};
 
 pub(crate) enum ModelType {
     WithCandleBackend(Model<Candle<f32, i64>>),
@@ -12,9 +12,8 @@ pub(crate) enum ModelType {
 }
 
 pub(crate) struct ImageClassifier {
-    pub(crate) model: ModelType
+    pub(crate) model: ModelType,
 }
-
 
 /// Returns the top 5 classes and convert them into a JsValue
 fn top_5_classes(probabilities: Vec<f32>) -> Vec<InferenceResult> {
@@ -33,7 +32,7 @@ fn top_5_classes(probabilities: Vec<f32>) -> Vec<InferenceResult> {
         .map(|(index, probability)| InferenceResult {
             index,
             probability: *probability,
-            label: "todo".to_string()
+            label: "todo".to_string(),
         })
         .collect()
 }

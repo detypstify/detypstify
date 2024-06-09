@@ -1,9 +1,8 @@
-pub mod model;
 pub mod frontend;
 pub mod inference;
+pub mod model;
 use dioxus::launch;
 use frontend::App;
-
 
 use tracing::{debug, Level};
 const HEIGHT: usize = 300;
@@ -19,5 +18,3 @@ fn main() {
     dioxus_logger::init(Level::DEBUG).expect("failed to init logger");
     launch(App);
 }
-
-

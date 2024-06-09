@@ -1,9 +1,9 @@
 use dioxus::html::input_data::MouseButton;
+use dioxus::prelude::*;
 use image::io::Reader as ImageReader;
 use std::io::Cursor;
 use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::Arc;
-use dioxus::prelude::*;
 use wasm_bindgen::{prelude::*, Clamped};
 
 use crate::inference::{inference, ImageClassifier, ModelType};
@@ -12,7 +12,9 @@ use crate::model::mnist::Model;
 #[component]
 pub(crate) fn App() -> Element {
     let device = Default::default();
-    let classifier = ImageClassifier { model: ModelType::WithNdArrayBackend(Model::new(&device))};
+    let classifier = ImageClassifier {
+        model: ModelType::WithNdArrayBackend(Model::new(&device)),
+    };
     let pos = Point::new();
     let pos_down = pos.clone();
     let pos_enter = pos.clone();
@@ -149,7 +151,12 @@ fn draw(event: MouseEvent, pos: Point) -> Option<Clamped<Vec<u8>>> {
         context.set_line_width(5.0);
         context.stroke();
 
-        Some(context.get_image_data(0.0, 0.0, 400.0, 300.0).unwrap().data())
+        Some(
+            context
+                .get_image_data(0.0, 0.0, 400.0, 300.0)
+                .unwrap()
+                .data(),
+        )
     } else {
         None
     }
