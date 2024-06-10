@@ -6,14 +6,14 @@ use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::Arc;
 use wasm_bindgen::{prelude::*, Clamped};
 
-use crate::inference::{inference, ImageClassifier, ModelType};
+use crate::inference::{crop_scale_get_image_data, inference, ImageClassifier, MLBackend};
 use crate::model::mnist::Model;
 
 #[component]
 pub(crate) fn App() -> Element {
     let device = Default::default();
     let classifier = ImageClassifier {
-        model: ModelType::WithNdArrayBackend(Model::new(&device)),
+        model: MLBackend::NdArray(Model::new(&device)),
     };
     let pos = Point::new();
     let pos_down = pos.clone();
@@ -62,12 +62,29 @@ pub(crate) fn App() -> Element {
                         set_output("out1", "1. 0");
                     },
                     onmousemove: move |event| {
-                        let maybe_canvas = draw(event, pos_move.clone());
-                        if let Some(cv) = maybe_canvas {
-                            use std::ops::Deref;
-                            let cv2 : &[u8] = cv.deref();
-                            inference(&classifier, cv2);
-                        }
+                        draw(event, pos_move.clone());
+                        let canvas = web_sys::window()
+                            .unwrap()
+                            .document()
+                            .unwrap()
+                            .get_element_by_id("canvas")
+                            .unwrap();
+                        let context = canvas
+                            .dyn_into::<web_sys::HtmlCanvasElement>()
+                            .unwrap()
+                            .get_context("2d")
+                            .unwrap()
+                            .unwrap()
+                            .dyn_into::<web_sys::CanvasRenderingContext2d>()
+                            .unwrap();
+                        crop_scale_get_image_data(&context);
+                        // if let Some(canvas) = maybe_canvas {
+                        //     use std::ops::Deref;
+                        //     let img : &[u8] = canvas.deref();
+                            // let proc_img = crop_scale_get_image_data(canvas);
+
+                            // inference(&classifier, todo!());
+                        // }
 
                     },
                 }
@@ -124,7 +141,7 @@ pub(crate) fn App() -> Element {
     }
 }
 
-fn draw(event: MouseEvent, pos: Point) -> Option<Clamped<Vec<u8>>> {
+fn draw(event: MouseEvent, pos: Point) {
     if event.held_buttons().contains(MouseButton::Primary) {
         let coords = event.element_coordinates();
         let canvas = web_sys::window()
@@ -150,15 +167,6 @@ fn draw(event: MouseEvent, pos: Point) -> Option<Clamped<Vec<u8>>> {
         context.set_stroke_style(&JsValue::from_str("white"));
         context.set_line_width(5.0);
         context.stroke();
-
-        Some(
-            context
-                .get_image_data(0.0, 0.0, 400.0, 300.0)
-                .unwrap()
-                .data(),
-        )
-    } else {
-        None
     }
 }
 
