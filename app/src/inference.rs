@@ -1,5 +1,6 @@
 use crate::model::mnist::Model;
 use burn_wgpu::{AutoGraphicsApi, Wgpu};
+use js_sys::Array;
 use wasm_bindgen::{prelude::*, Clamped};
 use web_sys::{CanvasRenderingContext2d, ImageData};
 
@@ -46,14 +47,9 @@ pub struct InferenceResult {
     label: String,
 }
 
-pub fn process_input(input: &[u8]) -> Vec<f32> {
-    todo!()
+pub async fn inference(model: &ImageClassifier, input: &[f32]) -> Vec<u32> {
 
-}
-
-pub fn inference(model: &ImageClassifier, input: &[f32]) {
-
-    let result = match model.model {
+    match model.model {
         MLBackend::Candle(ref model) => {
             type Backend = Candle<f32, i64>;
             let device = Default::default();
@@ -62,32 +58,23 @@ pub fn inference(model: &ImageClassifier, input: &[f32]) {
             let input = ((input / 255) - 0.1307) / 0.3081;
             // let output : Tensor<Backend, 2> = model.forward(input);
             todo!()
-
-    //         let input_tensor = Tensor::from_floats(ints, &Default::default()).reshape([1, CHANNELS, HEIGHT, WIDTH]);
-    //         model.forward(input_tensor);
-    //         todo!()
         },
         MLBackend::NdArray(ref model) => {
             type Backend = NdArray<f32>;
             let device = Default::default();
             // NOTE might be able to lift the resizing up in scope slightly
-            let input: Tensor<Backend, 3> = Tensor::from_floats(input, &device).reshape([1, 28, 28]);
+            let input: Tensor<Backend, 4> = Tensor::from_floats(input, &device).reshape([1, 1, 28, 28]);
             let input = ((input / 255) - 0.1307) / 0.3081;
             let output : Tensor<Backend, 2> = model.forward(input);
-    //         let input_tensor = Tensor::from_floats(ints, &Default::default()).reshape([1, CHANNELS, HEIGHT, WIDTH]);
-    //         model.forward(input_tensor);
-    //         todo!()
+            let sorted_results = output.argsort(1).await;
+            let output = sorted_results.into_data().await.convert::<u32>().value;
+            output.into_iter().take(3).collect()
         },
         MLBackend::Wgpu(ref model) => {
             type Backend = Wgpu<AutoGraphicsApi, f32, i32>;
-    //         let input_tensor = Tensor::from_floats(ints, &Default::default()).reshape([1, CHANNELS, HEIGHT, WIDTH]);
-    //         model.forward(input_tensor);
-    //         todo!()
+            todo!()
         },
-    };
-    // debug!("Inference is completed in {:?}", duration);
-    //
-    //
+    }
 }
 
 pub fn crop_scale_get_image_data(ctx: &CanvasRenderingContext2d) -> Vec<f32> {

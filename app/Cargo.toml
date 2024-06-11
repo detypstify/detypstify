@@ -9,9 +9,9 @@ edition = "2021"
 [dependencies]
 
 dioxus = { version = "0.5.1", features = ["web"] }
-burn = { git = "https://github.com/DieracDelta/burn.git", branch = "jr/fix_default", features = ["ndarray"], default-features=false }
-burn-wgpu = { git = "https://github.com/DieracDelta/burn.git", branch = "jr/fix_default", default-features = false}
-burn-candle = { git = "https://github.com/DieracDelta/burn.git", branch = "jr/fix_default", default-features = false}
+burn = { git = "https://github.com/tracel-ai/burn.git", branch = "main", features = ["ndarray"], default-features=false }
+burn-wgpu = { git = "https://github.com/tracel-ai/burn.git", branch = "main", default-features = false}
+burn-candle = { git = "https://github.com/tracel-ai/burn.git", branch = "main", default-features = false}
 image = "0.25.1"
 js-sys = "0.3.69"
 wasm-bindgen = "0.2.92"
@@ -22,7 +22,7 @@ dioxus-logger = "0.5.0"
 manganis = "0.2.2"
 
 [build-dependencies]
-burn-import = "0.13.0"
+burn-import = { git = "https://github.com/tracel-ai/burn.git", branch = "main", default-features = false, features = ["onnx"] }
 
 [dependencies.web-sys]
 version = "0.3.4"
