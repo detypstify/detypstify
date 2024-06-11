@@ -6,7 +6,7 @@ use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::Arc;
 use wasm_bindgen::{prelude::*, Clamped};
 
-use crate::inference::{crop_scale_get_image_data, inference, ImageClassifier, MLBackend};
+use crate::inference::{process_data, inference, ImageClassifier, MLBackend};
 use crate::model::mnist::Model;
 
 #[component]
@@ -62,30 +62,32 @@ pub(crate) fn App() -> Element {
                         set_output("out1", "1. 0");
                     },
                     onmousemove: move |event| {
-                        draw(event, pos_move.clone());
-                        let canvas = web_sys::window()
-                            .unwrap()
-                            .document()
-                            .unwrap()
-                            .get_element_by_id("canvas")
-                            .unwrap();
-                        let context = canvas
-                            .dyn_into::<web_sys::HtmlCanvasElement>()
-                            .unwrap()
-                            .get_context("2d")
-                            .unwrap()
-                            .unwrap()
-                            .dyn_into::<web_sys::CanvasRenderingContext2d>()
-                            .unwrap();
-                        crop_scale_get_image_data(&context);
-                        // if let Some(canvas) = maybe_canvas {
-                        //     use std::ops::Deref;
-                        //     let img : &[u8] = canvas.deref();
-                            // let proc_img = crop_scale_get_image_data(canvas);
+                        let classifier_ = classifier.clone();
+                        let pos_move_ = pos_move.clone();
+                        async move {
+                            draw(event, pos_move_);
+                            let canvas = web_sys::window()
+                                .unwrap()
+                                .document()
+                                .unwrap()
+                                .get_element_by_id("canvas")
+                                .unwrap();
+                            let context = canvas
+                                .dyn_into::<web_sys::HtmlCanvasElement>()
+                                .unwrap()
+                                .get_context("2d")
+                                .unwrap()
+                                .unwrap()
+                                .dyn_into::<web_sys::CanvasRenderingContext2d>()
+                                .unwrap();
+                            let processed_data = process_data(&context);
+                            let results = inference(&classifier_.clone(), processed_data.as_slice()).await;
+                        set_output("out1", &results[0].to_string());
+                        set_output("out2", &results[1].to_string());
+                        set_output("out3", &results[2].to_string());
 
-                            // inference(&classifier, todo!());
-                        // }
 
+                        }
                     },
                 }
             }

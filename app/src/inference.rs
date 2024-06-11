@@ -9,12 +9,14 @@ use burn::backend::NdArray;
 use burn::tensor::Tensor;
 use burn_candle::Candle;
 
+#[derive(Clone)]
 pub enum MLBackend {
     Candle(Model<Candle<f32, i64>>),
     NdArray(Model<NdArray<f32>>),
     Wgpu(Model<Wgpu<AutoGraphicsApi, f32, i32>>),
 }
 
+#[derive(Clone)]
 pub struct ImageClassifier {
     pub model: MLBackend,
 }
@@ -48,7 +50,6 @@ pub struct InferenceResult {
 }
 
 pub async fn inference(model: &ImageClassifier, input: &[f32]) -> Vec<u32> {
-
     match model.model {
         MLBackend::Candle(ref model) => {
             type Backend = Candle<f32, i64>;
@@ -77,7 +78,7 @@ pub async fn inference(model: &ImageClassifier, input: &[f32]) -> Vec<u32> {
     }
 }
 
-pub fn crop_scale_get_image_data(ctx: &CanvasRenderingContext2d) -> Vec<f32> {
+pub fn process_data(ctx: &CanvasRenderingContext2d) -> Vec<f32> {
     let canvas = ctx.canvas().unwrap();
     let width = canvas.width();
     let height = canvas.height();
