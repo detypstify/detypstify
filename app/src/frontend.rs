@@ -4,21 +4,35 @@ use image::io::Reader as ImageReader;
 use std::io::Cursor;
 use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::Arc;
-use wasm_bindgen::{prelude::*, Clamped};
+use wasm_bindgen::prelude::*;
+use web_sys::{window, Navigator};
 
 use crate::inference::{inference, process_data, ImageClassifier, MLBackend};
 use crate::model::mnist::Model;
 
 #[component]
 pub(crate) fn App() -> Element {
-    let device = Default::default();
-    let classifier = ImageClassifier {
-        model: MLBackend::NdArray(Model::new(&device)),
-    };
     let pos = Point::new();
     let pos_down = pos.clone();
     let pos_enter = pos.clone();
     let pos_move = pos.clone();
+    let window = window().expect("Missing Window");
+    let navigator = window.navigator();
+    let adapter_promise = JsValue::from(Navigator::gpu(&navigator));
+    let has_wgpu = !adapter_promise.is_undefined();
+    let classifier = if has_wgpu {
+        tracing::error!("WGPU");
+        let device = Default::default();
+        ImageClassifier {
+            model: MLBackend::Candle(Box::new(Model::new(&device))),
+        }
+    } else {
+        tracing::error!("Falling back to CPU");
+        let device = Default::default();
+        ImageClassifier {
+            model: MLBackend::NdArray(Box::new(Model::new(&device))),
+        }
+    };
 
     rsx! {
         link { rel: "stylesheet", href: "main.css" }
@@ -65,13 +79,16 @@ pub(crate) fn App() -> Element {
                         let classifier_ = classifier.clone();
                         let pos_move_ = pos_move.clone();
                         async move {
-                            draw(event, pos_move_);
+
+                            let need_reprocess = draw(event, pos_move_);
                             let canvas = web_sys::window()
                                 .unwrap()
                                 .document()
                                 .unwrap()
                                 .get_element_by_id("canvas")
                                 .unwrap();
+                            //TODO how do
+                            // canvas.will_read_frequently(true);
                             let context = canvas
                                 .dyn_into::<web_sys::HtmlCanvasElement>()
                                 .unwrap()
@@ -80,11 +97,13 @@ pub(crate) fn App() -> Element {
                                 .unwrap()
                                 .dyn_into::<web_sys::CanvasRenderingContext2d>()
                                 .unwrap();
-                            if let Some(processed_data) = process_data(&context) {
-                                let results = inference(&classifier_.clone(), processed_data.as_slice()).await;
-                                set_output("out1", &results[0].to_string());
-                                set_output("out2", &results[1].to_string());
-                                set_output("out3", &results[2].to_string());
+                            if need_reprocess {
+                                if let Some(processed_data) = process_data(&context) {
+                                    let results = inference(&classifier_, processed_data.as_slice()).await;
+                                    set_output("out1", &results[0].to_string());
+                                    set_output("out2", &results[1].to_string());
+                                    set_output("out3", &results[2].to_string());
+                                }
                             }
                         }
                     },
@@ -122,11 +141,9 @@ pub(crate) fn App() -> Element {
                                     for file_name in &files {
                                         if let Some(bytes) = file_engine.read_file(file_name).await
                                         {
-                                            let image = ImageReader::new(Cursor::new(bytes))
+                                            let _image = ImageReader::new(Cursor::new(bytes))
                                                 .with_guessed_format().unwrap()
                                                 .decode().unwrap();
-                                            tracing::debug!("Image width: {}, height: {}",
-                                                image.width(), image.height());
                                         }
                                     }
                                 }
@@ -142,7 +159,7 @@ pub(crate) fn App() -> Element {
     }
 }
 
-fn draw(event: MouseEvent, pos: Point) {
+fn draw(event: MouseEvent, pos: Point) -> bool {
     if event.held_buttons().contains(MouseButton::Primary) {
         let coords = event.element_coordinates();
         let canvas = web_sys::window()
@@ -168,6 +185,9 @@ fn draw(event: MouseEvent, pos: Point) {
         context.set_stroke_style(&JsValue::from_str("white"));
         context.set_line_width(5.0);
         context.stroke();
+        true
+    } else {
+        false
     }
 }
 

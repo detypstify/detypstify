@@ -1,7 +1,6 @@
 use crate::model::mnist::Model;
 use burn::tensor::backend::Backend;
 use burn_wgpu::{AutoGraphicsApi, Wgpu};
-use js_sys::Array;
 use wasm_bindgen::{prelude::*, Clamped};
 use web_sys::{CanvasRenderingContext2d, ImageData};
 
@@ -11,9 +10,9 @@ use burn_candle::Candle;
 
 #[derive(Clone)]
 pub enum MLBackend {
-    Candle(Model<Candle<f32, i64>>),
-    NdArray(Model<NdArray<f32>>),
-    Wgpu(Model<Wgpu<AutoGraphicsApi, f32, i32>>),
+    Candle(Box<Model<Candle<f32, i64>>>),
+    NdArray(Box<Model<NdArray<f32>>>),
+    Wgpu(Box<Model<Wgpu<AutoGraphicsApi, f32, i32>>>),
 }
 
 #[derive(Clone)]
@@ -40,7 +39,6 @@ pub async fn inference(classifier: &ImageClassifier, input: &[f32]) -> Vec<u32> 
 
 pub async fn compute<B: Backend>(model: &Model<B>, input: &[f32]) -> Vec<u32> {
     let device = Default::default();
-    // NOTE might be able to lift the resizing up in scope slightly
     let input: Tensor<B, 4> = Tensor::from_floats(input, &device).reshape([1, 1, 28, 28]);
     let input = ((input / 255) - 0.1307) / 0.3081;
     let output: Tensor<B, 2> = model.forward(input);
@@ -59,13 +57,6 @@ pub fn process_data(ctx: &CanvasRenderingContext2d) -> Option<Vec<f32>> {
         .unwrap();
 
     if let Some((crop_x, crop_y, crop_width, crop_height)) = find_bounds(&image_data) {
-        tracing::error!(
-            "crop_x: {}, crop_y: {}, crop_width: {}, crop_height: {}",
-            crop_x,
-            crop_y,
-            crop_width,
-            crop_height
-        );
         let cropped_data = ctx
             .get_image_data(
                 crop_x as f64,

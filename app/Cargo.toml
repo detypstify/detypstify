@@ -15,22 +15,26 @@ burn-candle = { git = "https://github.com/tracel-ai/burn.git", branch = "main", 
 image = "0.25.1"
 js-sys = "0.3.69"
 wasm-bindgen = "0.2.92"
+wasm-bindgen-futures = "0.4.42"
 
 # Debug
 tracing = "0.1.40"
-dioxus-logger = "0.5.0"
+dioxus-logger = "0.5.1"
 manganis = "0.2.2"
 
 [build-dependencies]
 burn-import = { git = "https://github.com/tracel-ai/burn.git", branch = "main", default-features = false, features = ["onnx"] }
 
 [dependencies.web-sys]
-version = "0.3.4"
+version = "0.3.69"
 features = [
   'CanvasRenderingContext2d',
   'Document',
   'Element',
   'HtmlCanvasElement',
   'Window',
-  'ImageData'
+  'ImageData',
+  'Navigator',
+  'ContextAttributes2d',
+  'Gpu',
 ]

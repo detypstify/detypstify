@@ -4,11 +4,7 @@ pub mod model;
 use dioxus::launch;
 use frontend::App;
 
-use tracing::{debug, Level};
-const HEIGHT: usize = 300;
-const WIDTH: usize = 400;
-const CHANNELS: usize = 3;
-
+use tracing::Level;
 // TODO use globals for width and height of canvas
 
 // Urls are relative to your Cargo.toml file
