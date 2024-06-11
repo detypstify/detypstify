@@ -1,4 +1,5 @@
 use crate::model::mnist::Model;
+use burn::tensor::backend::Backend;
 use burn_wgpu::{AutoGraphicsApi, Wgpu};
 use js_sys::Array;
 use wasm_bindgen::{prelude::*, Clamped};
@@ -20,63 +21,32 @@ pub struct ImageClassifier {
     pub model: MLBackend,
 }
 
-/// Returns the top 5 classes and convert them into a JsValue
-fn top_5_classes(probabilities: Vec<f32>) -> Vec<InferenceResult> {
-    // Convert the probabilities into a vector of (index, probability)
-    let mut probabilities: Vec<_> = probabilities.iter().enumerate().collect();
-
-    // Sort the probabilities in descending order
-    probabilities.sort_by(|a, b| b.1.partial_cmp(a.1).unwrap());
-
-    // Take the top 5 probabilities
-    probabilities.truncate(5);
-
-    // Convert the probabilities into InferenceResult
-    probabilities
-        .into_iter()
-        .map(|(index, probability)| InferenceResult {
-            index,
-            probability: *probability,
-            label: "todo".to_string(),
-        })
-        .collect()
-}
-
-pub struct InferenceResult {
-    index: usize,
-    probability: f32,
-    label: String,
-}
-
-pub async fn inference(model: &ImageClassifier, input: &[f32]) -> Vec<u32> {
-    match model.model {
+pub async fn inference(classifier: &ImageClassifier, input: &[f32]) -> Vec<u32> {
+    match classifier.model {
         MLBackend::Candle(ref model) => {
             type Backend = Candle<f32, i64>;
-            let device = Default::default();
-            // NOTE might be able to lift the resizing up in scope slightly
-            let input: Tensor<Backend, 3> =
-                Tensor::from_floats(input, &device).reshape([1, 28, 28]);
-            let input = ((input / 255) - 0.1307) / 0.3081;
-            // let output : Tensor<Backend, 2> = model.forward(input);
-            todo!()
+            compute::<Backend>(model, input).await
         }
         MLBackend::NdArray(ref model) => {
             type Backend = NdArray<f32>;
-            let device = Default::default();
-            // NOTE might be able to lift the resizing up in scope slightly
-            let input: Tensor<Backend, 4> =
-                Tensor::from_floats(input, &device).reshape([1, 1, 28, 28]);
-            let input = ((input / 255) - 0.1307) / 0.3081;
-            let output: Tensor<Backend, 2> = model.forward(input);
-            let sorted_results = output.argsort(1).await;
-            let output = sorted_results.into_data().await.convert::<u32>().value;
-            output.into_iter().take(3).collect()
+            compute::<Backend>(model, input).await
         }
         MLBackend::Wgpu(ref model) => {
             type Backend = Wgpu<AutoGraphicsApi, f32, i32>;
-            todo!()
+            compute::<Backend>(model, input).await
         }
     }
+}
+
+pub async fn compute<B: Backend>(model: &Model<B>, input: &[f32]) -> Vec<u32> {
+    let device = Default::default();
+    // NOTE might be able to lift the resizing up in scope slightly
+    let input: Tensor<B, 4> = Tensor::from_floats(input, &device).reshape([1, 1, 28, 28]);
+    let input = ((input / 255) - 0.1307) / 0.3081;
+    let output: Tensor<B, 2> = model.forward(input);
+    let sorted_results = output.argsort(1).await;
+    let output = sorted_results.into_data().await.convert::<u32>().value;
+    output.into_iter().take(3).collect()
 }
 
 pub fn process_data(ctx: &CanvasRenderingContext2d) -> Option<Vec<f32>> {
