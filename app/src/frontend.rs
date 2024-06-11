@@ -6,7 +6,7 @@ use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::Arc;
 use wasm_bindgen::{prelude::*, Clamped};
 
-use crate::inference::{process_data, inference, ImageClassifier, MLBackend};
+use crate::inference::{inference, process_data, ImageClassifier, MLBackend};
 use crate::model::mnist::Model;
 
 #[component]
