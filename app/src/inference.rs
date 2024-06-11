@@ -78,22 +78,26 @@ pub async fn inference(model: &ImageClassifier, input: &[f32]) -> Vec<u32> {
     }
 }
 
-pub fn process_data(ctx: &CanvasRenderingContext2d) -> Vec<f32> {
+pub fn process_data(ctx: &CanvasRenderingContext2d) -> Option<Vec<f32>> {
     let canvas = ctx.canvas().unwrap();
     let width = canvas.width();
     let height = canvas.height();
 
     let image_data = ctx.get_image_data(0.0, 0.0, width as f64, height as f64).unwrap();
 
-    let (crop_x, crop_y, crop_width, crop_height) = find_bounds(&image_data);
-    let cropped_data = ctx.get_image_data(crop_x as f64, crop_y as f64, crop_width as f64, crop_height as f64).unwrap();
+    if let Some((crop_x, crop_y, crop_width, crop_height)) = find_bounds(&image_data) {
+        tracing::error!("crop_x: {}, crop_y: {}, crop_width: {}, crop_height: {}", crop_x, crop_y, crop_width, crop_height);
+        let cropped_data = ctx.get_image_data(crop_x as f64, crop_y as f64, crop_width as f64, crop_height as f64).unwrap();
 
-    let scaled_data = scale_image_data_to_28x28(&cropped_data).unwrap();
+        let scaled_data = scale_image_data_to_28x28(&cropped_data).unwrap();
 
-    rgba_to_gray(&scaled_data)
+        Some(rgba_to_gray(&scaled_data))
+    } else {
+        None
+    }
 }
 
-fn find_bounds(image_data: &ImageData) -> (usize, usize, usize, usize) {
+fn find_bounds(image_data: &ImageData) -> Option<(usize, usize, usize, usize)> {
     let data = image_data.data();
     let width = image_data.width() as usize;
     let height = image_data.height() as usize;
@@ -113,8 +117,13 @@ fn find_bounds(image_data: &ImageData) -> (usize, usize, usize, usize) {
             }
         }
     }
-
-    (min_x, min_y, max_x - min_x + 1, max_y - min_y + 1)
+    // Check if any non-transparent pixel was found
+    if min_x <= max_x && min_y <= max_y {
+        Some((min_x, min_y, max_x - min_x + 1, max_y - min_y + 1))
+    } else {
+        // No non-transparent pixels found, return None
+        None
+    }
 }
 
 fn scale_image_data_to_28x28(image_data: &ImageData) -> Result<ImageData, JsValue> {

@@ -80,13 +80,12 @@ pub(crate) fn App() -> Element {
                                 .unwrap()
                                 .dyn_into::<web_sys::CanvasRenderingContext2d>()
                                 .unwrap();
-                            let processed_data = process_data(&context);
-                            let results = inference(&classifier_.clone(), processed_data.as_slice()).await;
-                        set_output("out1", &results[0].to_string());
-                        set_output("out2", &results[1].to_string());
-                        set_output("out3", &results[2].to_string());
-
-
+                            if let Some(processed_data) = process_data(&context) {
+                                let results = inference(&classifier_.clone(), processed_data.as_slice()).await;
+                                set_output("out1", &results[0].to_string());
+                                set_output("out2", &results[1].to_string());
+                                set_output("out3", &results[2].to_string());
+                            }
                         }
                     },
                 }
