@@ -84,9 +84,8 @@ fn fonts() -> Vec<Font> {
             let buffer = Bytes::from(entry);
             let face_count = ttf_parser::fonts_in_collection(&buffer).unwrap_or(1);
             (0..face_count).map(move |face| {
-                Font::new(buffer.clone(), face).unwrap_or_else(|| {
-                    panic!("failed to load font from (face index {face})")
-                })
+                Font::new(buffer.clone(), face)
+                    .unwrap_or_else(|| panic!("failed to load font from (face index {face})"))
             })
         })
         .collect()

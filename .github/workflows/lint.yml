@@ -1,4 +1,4 @@
-name: "Build and deploy"
+name: "Lint"
 
 on:
   pull_request:
@@ -25,17 +25,6 @@ jobs:
         name: jrestivo
         authToken: '${{ secrets.CACHIX_AUTH_TOKEN }}'
     - run: |
-        nix build . -L
-    - run: |
         # git apply .github/patch
         cd app
-        nix develop -c cargo install --git https://github.com/DioxusLabs/dioxus dioxus-cli
-        nix develop -c /home/runner/.cargo/bin/dx build --release
-        # mv dist/detypstify/* dist/
-    - uses: crazy-max/ghaction-github-pages@v4
-      if: github.ref == 'refs/heads/main'
-      with:
-        target_branch: gh-pages
-        build_dir: ./app/dist
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        nix develop -c cargo clippy --target wasm32-unknown-unknown --examples --bins --tests -- -D warnings

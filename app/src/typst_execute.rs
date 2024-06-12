@@ -3,11 +3,11 @@ use js_sys::Uint8Array;
 use tracing::debug;
 
 // use typst::foundations::Smart;
+use crate::typst::TypstWrapperWorld;
 use typst::{eval::Tracer, layout::Abs};
 use web_sys::{Blob, BlobPropertyBag, Url};
-use crate::typst::TypstWrapperWorld;
 
-pub fn create_svg(_formula: String) -> String {
+pub fn create_svg(_formula: &str) -> String {
     // TODO actually use formula
     let content = r#"
         $x^2 + 5x + 2 = 0$
@@ -30,9 +30,9 @@ pub fn create_svg(_formula: String) -> String {
 
     let blob = Blob::new_with_u8_array_sequence_and_options(
         &js_sys::Array::of1(&uint8_array.into()),
-        &options
-    ).unwrap();
-
+        &options,
+    )
+    .unwrap();
 
     Url::create_object_url_with_blob(&blob).unwrap()
 }
