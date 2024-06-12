@@ -8,6 +8,7 @@
         {perSystem = {lib, ...}: {_module.args.l = lib // builtins;};}
 
         inputs.treefmt-nix.flakeModule
+        ./python.flakeModule.nix
         ./paper/flakeModule.nix
       ];
       perSystem = {
@@ -18,6 +19,7 @@
       }: {
         devShells.default = pkgs.mkShell {
           inputsFrom = [
+            config.devShells.python
             config.devShells.paper
           ];
 
@@ -28,11 +30,7 @@
 
         treefmt.config = {
           projectRootFile = "flake.nix";
-          programs = {
-            ruff.enable = true;
-            alejandra.enable = true;
-            rustfmt.enable = true;
-          };
+          programs.alejandra.enable = true;
         };
       };
     };
