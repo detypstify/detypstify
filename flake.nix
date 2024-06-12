@@ -20,8 +20,8 @@
     utils.lib.eachDefaultSystem (system:
     let
         fenixStable = with fenix.packages.${system}; combine [
-            (stable.withComponents [ "cargo" "clippy" "rust-src" "rustc" "rustfmt" "llvm-tools-preview" ])
-            targets.wasm32-unknown-unknown.stable.rust-std
+            (latest.withComponents [ "cargo" "clippy" "rust-src" "rustc" "rustfmt" "llvm-tools-preview" ])
+            targets.wasm32-unknown-unknown.latest.rust-std
           ];
         # overlaid = final: prev:
         #   {
@@ -54,6 +54,7 @@
             RUST_SRC_PATH = pkgs.rustPlatform.rustLibSrc;
             buildInputs =
               with pkgs; [
+                cargo-udeps
                 python3
                 # dioxus-cli
                 ninja

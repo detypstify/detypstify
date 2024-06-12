@@ -17,7 +17,7 @@ pub fn set_svg(formula: &str) -> String {
     let mut tracer = Tracer::default();
     let document = typst::compile(&world, &mut tracer).expect("Error compiling typst.");
     let svg = typst_svg::svg_merged(&document, Abs::pt(0.0));
-    svg.replace("fill=\"#000000\"", "fille=\"#ffffff\"")
+    svg.replace("fill=\"#000000\"", "fill=\"#ffffff\"")
 }
 
 pub fn mutate_svg(formula: &str, svg_id: &str) {

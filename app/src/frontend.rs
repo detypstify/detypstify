@@ -228,10 +228,10 @@ fn OutputModel(name: String, num: String, formula: String) -> Element {
                 class: "ml-8 mt-1",
                 "{formula}"
             }
+            div {
+                id: "{name}_img",
+            },
         }
-        div {
-            id: "{name}_img",
-        },
     }
 }
 
