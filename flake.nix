@@ -20,8 +20,8 @@
     utils.lib.eachDefaultSystem (system:
     let
         fenixStable = with fenix.packages.${system}; combine [
-            (latest.withComponents [ "cargo" "clippy" "rust-src" "rustc" "rustfmt" "llvm-tools-preview" ])
-            targets.wasm32-unknown-unknown.latest.rust-std
+            (stable.withComponents [ "cargo" "clippy" "rust-src" "rustc" "rustfmt" "llvm-tools-preview" ])
+            targets.wasm32-unknown-unknown.stable.rust-std
           ];
         # overlaid = final: prev:
         #   {
