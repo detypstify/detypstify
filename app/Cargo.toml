@@ -26,6 +26,7 @@ manganis = "0.2.2"
 # TODO we may want to hide these behind a feature flag eventually
 typst = "0.11.1"
 typst-svg = "0.11.1"
+ttf-parser = "0.21.1"
 comemo = "0.4.0"
 typst-assets = {version = "0.11.1", features = ["fonts"]}
 
