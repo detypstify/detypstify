@@ -9,6 +9,18 @@ export TYPST_ROOT := paper-root
 [private]
 default:
 	@just --list --unsorted
+
+[group('python')]
+train:
+        poetry run train
+
+[group('python')]
+train_val_split:
+        poetry run train_val_split
+
+[group('python')]
+symbols2svg:
+        poetry run symbols2svg
         
 [group('typst')]
 typ-preview:
