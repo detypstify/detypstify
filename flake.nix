@@ -6,14 +6,21 @@
       systems = ["x86_64-linux" "aarch64-darwin" "x86_64-darwin"];
       imports = [
         {perSystem = {lib, ...}: {_module.args.l = lib // builtins;};}
+
         inputs.treefmt-nix.flakeModule
+        ./paper/flakeModule.nix
       ];
       perSystem = {
         l,
         pkgs,
+        config,
         ...
       }: {
         devShells.default = pkgs.mkShell {
+          inputsFrom = [
+            config.devShells.paper
+          ];
+
           packages = l.attrValues {
             inherit (pkgs) just;
           };
