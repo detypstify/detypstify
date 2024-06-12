@@ -5,10 +5,11 @@ use std::io::Cursor;
 use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::Arc;
 use wasm_bindgen::prelude::*;
-use web_sys::{window, Navigator};
+use web_sys::{window, ContextAttributes2d, Navigator};
 
 use crate::inference::{inference, process_data, ImageClassifier, MLBackend};
 use crate::model::mnist::Model;
+use crate::typst_execute::mutate_svg;
 
 #[component]
 pub(crate) fn App() -> Element {
@@ -72,7 +73,6 @@ pub(crate) fn App() -> Element {
                       set_position(evt, pos_enter.clone());
                     },
                     onmouseup: move |_| {
-                        // TODO: capture the image and run prediction
                         set_output("out1", "1. 0");
                     },
                     onmousemove: move |event| {
@@ -87,12 +87,12 @@ pub(crate) fn App() -> Element {
                                 .unwrap()
                                 .get_element_by_id("canvas")
                                 .unwrap();
-                            //TODO how do
-                            // canvas.will_read_frequently(true);
+                            let mut options = ContextAttributes2d::new();
+                            options.will_read_frequently(true);
                             let context = canvas
                                 .dyn_into::<web_sys::HtmlCanvasElement>()
                                 .unwrap()
-                                .get_context("2d")
+                                .get_context_with_context_options("2d", &options)
                                 .unwrap()
                                 .unwrap()
                                 .dyn_into::<web_sys::CanvasRenderingContext2d>()
@@ -118,8 +118,12 @@ pub(crate) fn App() -> Element {
                     onclick: move |_| {
                         let canvas = web_sys::window().unwrap().document().unwrap()
                             .get_element_by_id("canvas").unwrap();
-                        let context = canvas.dyn_into::<web_sys::HtmlCanvasElement>()
-                            .unwrap().get_context("2d").unwrap().unwrap()
+
+                        let mut options = ContextAttributes2d::new();
+                        options.will_read_frequently(true);
+                        let context =
+                            canvas.dyn_into::<web_sys::HtmlCanvasElement>()
+                            .unwrap().get_context_with_context_options("2d", &options).unwrap().unwrap()
                             .dyn_into::<web_sys::CanvasRenderingContext2d>().unwrap();
                         context.clear_rect(0.0, 0.0, 400.0, 300.0);
                         clear_outputs();
@@ -152,9 +156,9 @@ pub(crate) fn App() -> Element {
                     }
                 }
             }
-            OutputModel { name: "out1", res: "1." }
-            OutputModel { name: "out2", res: "2." }
-            OutputModel { name: "out3", res: "3." }
+            OutputModel { name: "out1", num: "1.", formula: "1." }
+            OutputModel { name: "out2", num: "2.", formula: "2." }
+            OutputModel { name: "out3", num: "3.", formula: "3." }
         }
     }
 }
@@ -168,10 +172,12 @@ fn draw(event: MouseEvent, pos: Point) -> bool {
             .unwrap()
             .get_element_by_id("canvas")
             .unwrap();
+        let mut options = ContextAttributes2d::new();
+        options.will_read_frequently(true);
         let context = canvas
             .dyn_into::<web_sys::HtmlCanvasElement>()
             .unwrap()
-            .get_context("2d")
+            .get_context_with_context_options("2d", &options)
             .unwrap()
             .unwrap()
             .dyn_into::<web_sys::CanvasRenderingContext2d>()
@@ -191,14 +197,15 @@ fn draw(event: MouseEvent, pos: Point) -> bool {
     }
 }
 
-fn set_output(name: &str, res: &str) {
-    let out = web_sys::window()
+fn set_output(name: &str, formula: &str) {
+    let out_formula = web_sys::window()
         .unwrap()
         .document()
         .unwrap()
-        .get_element_by_id(name)
+        .get_element_by_id(&format!("{name}_formula"))
         .unwrap();
-    out.set_text_content(Some(res));
+    out_formula.set_text_content(Some(formula));
+    mutate_svg(formula, &format!("{name}_img"));
 }
 
 fn clear_outputs() {
@@ -208,19 +215,23 @@ fn clear_outputs() {
 }
 
 #[component]
-fn OutputModel(name: String, res: String) -> Element {
+fn OutputModel(name: String, num: String, formula: String) -> Element {
     rsx! {
         div {
             class: "flex justify-left",
             h1 {
                 class: "text-2xl font-bold ",
-                "{res}"
+                "{num}"
             }
-            p {id : "{name}",
-            class: "ml-8 mt-1",
-            ""
+            p {
+                id : "{name}_formula",
+                class: "ml-8 mt-1",
+                "{formula}"
             }
         }
+        div {
+            id: "{name}_img",
+        },
     }
 }
 
