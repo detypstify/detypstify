@@ -49,7 +49,7 @@ def rename_files(validation_dir):
         os.rename(os.path.join(formulas_dir, formula_file), os.path.join(formulas_dir, new_formula_name))
         os.rename(os.path.join(images_dir, image_file), os.path.join(images_dir, new_image_name))
 
-if __name__ == "__main__":
+def main():
     # Define directories
     src_formulas_dir = 'new_formulas'
     src_images_dir = 'new_images_resized'
