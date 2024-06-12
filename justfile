@@ -1,14 +1,27 @@
-install_deps:
-        npm install typescript
+root := justfile_directory()
 
-clean:
-        echo "cleaning"
-        rm -rf build_artifacts
-        mkdir build_artifacts
-build:
-        echo "building"
-        pushd recognize && wasm-pack build --out-dir ../build_artifacts/wasm --target web
-        pushd webapp && ../node_modules/typescript/bin/tsc script.ts -m es2022 --lib es2022,dom
-        mv webapp/script.js build_artifacts/script.js
+paper-root := root / 'paper'
+paper-src := paper-root / 'main.typ'
+paper-out := root / 'out' / 'detypstify-ocr-for-formula-generation.pdf'
 
+export TYPST_ROOT := paper-root
 
+[private]
+default:
+	@just --list --unsorted
+        
+[group('typst')]
+typ-preview:
+        typst-preview --root {{ paper-root }} {{ paper-src }}
+
+[group('typst')]
+typ-build: 
+        typst compile {{ paper-src }} {{ paper-out }}
+
+[group('typst')]
+typ-watch: 
+        typst watch {{ paper-src }} {{ paper-out }}
+
+[group('typst')]          
+typ-format: 
+        typstyle -i format-all 
