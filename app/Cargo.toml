@@ -51,4 +51,10 @@ features = [
   'Navigator',
   'ContextAttributes2d',
   'Gpu',
+  'DomParser',
+  'SupportedType',
+  'SvgRect',
+  'SvgBoundingBoxOptions',
+  'SvgGraphicsElement',
+  "SvgsvgElement"
 ]

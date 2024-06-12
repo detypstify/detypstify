@@ -9,7 +9,7 @@ use web_sys::{window, ContextAttributes2d, Navigator};
 
 use crate::inference::{inference, process_data, ImageClassifier, MLBackend};
 use crate::model::mnist::Model;
-use crate::typst_execute::create_svg;
+use crate::typst_execute::mutate_svg;
 
 #[component]
 pub(crate) fn App() -> Element {
@@ -87,8 +87,6 @@ pub(crate) fn App() -> Element {
                                 .unwrap()
                                 .get_element_by_id("canvas")
                                 .unwrap();
-                            //TODO how do
-                            // canvas.will_read_frequently(true);
                             let mut options = ContextAttributes2d::new();
                             options.will_read_frequently(true);
                             let context = canvas
@@ -207,15 +205,7 @@ fn set_output(name: &str, formula: &str) {
         .get_element_by_id(&format!("{name}_formula"))
         .unwrap();
     out_formula.set_text_content(Some(formula));
-    let out_svg = web_sys::window()
-        .unwrap()
-        .document()
-        .unwrap()
-        .get_element_by_id(&format!("{name}_img"))
-        .unwrap();
-    let svg = create_svg(formula);
-
-    out_svg.set_text_content(Some(&svg));
+    mutate_svg(formula, &format!("{name}_img"));
 }
 
 fn clear_outputs() {
@@ -226,7 +216,6 @@ fn clear_outputs() {
 
 #[component]
 fn OutputModel(name: String, num: String, formula: String) -> Element {
-    let formula_bin = create_svg(&formula);
     rsx! {
         div {
             class: "flex justify-left",
@@ -240,9 +229,8 @@ fn OutputModel(name: String, num: String, formula: String) -> Element {
                 "{formula}"
             }
         }
-        img {
+        div {
             id: "{name}_img",
-            src: "{formula_bin}"
         },
     }
 }

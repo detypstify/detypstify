@@ -17,7 +17,7 @@ asset_dir = "public/"
 
 # HTML title tag content
 title = "Detypstify"
-# base_path = "detypstify/"
+base_path = "detypstify/"
 
 [web.watcher]
 

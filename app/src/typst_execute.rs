@@ -1,18 +1,14 @@
-use js_sys::Uint8Array;
-// use std::fs;
-use tracing::debug;
+use wasm_bindgen::JsCast;
+use web_sys::SvgsvgElement;
 
 // use typst::foundations::Smart;
 use crate::typst::TypstWrapperWorld;
 use typst::{eval::Tracer, layout::Abs};
-use web_sys::{Blob, BlobPropertyBag, Url};
+use web_sys::{DomParser, SupportedType};
 
-pub fn create_svg(_formula: &str) -> String {
-    // TODO actually use formula
-    let content = r#"
-        $x^2 + 5x + 2 = 0$
-    "#
-    .to_owned();
+// TODO rename
+pub fn set_svg(formula: &str) -> String {
+    let content = format!("${}$", formula).to_owned();
 
     // Create world with content.
     let world = TypstWrapperWorld::new(content);
@@ -20,19 +16,41 @@ pub fn create_svg(_formula: &str) -> String {
     // Render document
     let mut tracer = Tracer::default();
     let document = typst::compile(&world, &mut tracer).expect("Error compiling typst.");
-    let svg_string = typst_svg::svg_merged(&document, Abs::pt(0.0));
-    debug!("string svg: {}", svg_string);
-    let svg_bytes = svg_string.as_bytes();
-    let uint8_array = Uint8Array::from(svg_bytes);
+    typst_svg::svg_merged(&document, Abs::pt(0.0))
+}
 
-    let mut options = BlobPropertyBag::new();
-    options.type_("image/svg+xml");
+pub fn mutate_svg(formula: &str, svg_id: &str) {
+    let resulting_svg = set_svg(formula);
 
-    let blob = Blob::new_with_u8_array_sequence_and_options(
-        &js_sys::Array::of1(&uint8_array.into()),
-        &options,
+    let parser = DomParser::new().unwrap();
+    let svg_doc = parser
+        .parse_from_string(&resulting_svg, SupportedType::ImageSvgXml)
+        .unwrap();
+    let svg_doc_ele = svg_doc.document_element().unwrap();
+    tracing::error!("svg_doc: {:?}", svg_doc);
+    tracing::error!("svg_doc_ele: {:?}", svg_doc_ele);
+    let svg = svg_doc_ele.dyn_into::<SvgsvgElement>().unwrap();
+
+    let body = web_sys::window().unwrap().document().unwrap();
+    let container = body.get_element_by_id(svg_id).unwrap();
+    while let Some(child) = container.first_child() {
+        container
+            .remove_child(&child)
+            .expect("Failed to remove child");
+    }
+    container.append_child(&svg).unwrap();
+    let bbox = svg.get_b_box().unwrap();
+    svg.set_attribute(
+        "viewBox",
+        &format!(
+            "{} {} {} {}",
+            bbox.x(),
+            bbox.y(),
+            bbox.width(),
+            bbox.height()
+        ),
     )
     .unwrap();
-
-    Url::create_object_url_with_blob(&blob).unwrap()
+    svg.set_attribute("width", "100").unwrap();
+    svg.set_attribute("height", "100").unwrap();
 }
