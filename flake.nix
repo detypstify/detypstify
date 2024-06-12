@@ -20,8 +20,8 @@
     utils.lib.eachDefaultSystem (system:
     let
         fenixStable = with fenix.packages.${system}; combine [
-            (stable.withComponents [ "cargo" "clippy" "rust-src" "rustc" "rustfmt" "llvm-tools-preview" ])
-            targets.wasm32-unknown-unknown.stable.rust-std
+            (latest.withComponents [ "cargo" "clippy" "rust-src" "rustc" "rustfmt" "llvm-tools-preview" ])
+            targets.wasm32-unknown-unknown.latest.rust-std
           ];
         # overlaid = final: prev:
         #   {
@@ -48,12 +48,13 @@
           devShell = pkgs.mkShell.override { } {
             shellHook = ''
               export CARGO_TARGET_DIR="$(git rev-parse --show-toplevel)/app/target_dirs/nix_rustc";
-              export RUSTFLAGS="-C embed-bitcode=yes -C codegen-units=1 -C opt-level=3 -Ctarget-feature=+simd128 --cfg web_sys_unstable_apis"
+              # export RUSTFLAGS="-C embed-bitcode=yes -C codegen-units=1 -C opt-level=3 --cfg web_sys_unstable_apis"
             '';
             # LD_LIBRARY_PATH = "${pkgs.xorg.libX11}/lib:${pkgs.xorg.libXcursor}/lib:${pkgs.xorg.libXrandr}/lib:${pkgs.xorg.libXi}/lib:${pkgs.libxkbcommon}/lib:${pkgs.vulkan-loader}/lib:${pkgs.stdenv.cc.cc.lib}/lib:${pkgs.libGL}/lib"; /* :${pkgs.glib.out}/lib"; */
             RUST_SRC_PATH = pkgs.rustPlatform.rustLibSrc;
             buildInputs =
               with pkgs; [
+                cargo-udeps
                 python3
                 # dioxus-cli
                 ninja
