@@ -1,0 +1,13 @@
+[target.wasm32-unknown-unknown] 
+rustflags = [
+  '-C',
+  'target-feature=+atomics,+bulk-memory,+mutable-globals',
+  '-C',
+  'embed-bitcode=yes',
+  '-C',
+  'codegen-units=1',
+  '-C',
+  'opt-level=3',
+  '--cfg', 
+  'web_sys_unstable_apis'
+]

@@ -8,6 +8,7 @@
         {perSystem = {lib, ...}: {_module.args.l = lib // builtins;};}
 
         inputs.treefmt-nix.flakeModule
+        ./rust.flakeModule.nix
         ./python.flakeModule.nix
         ./paper/flakeModule.nix
       ];
@@ -19,6 +20,7 @@
       }: {
         devShells.default = pkgs.mkShell {
           inputsFrom = [
+            config.devShells.rust
             config.devShells.python
             config.devShells.paper
           ];
@@ -38,10 +40,15 @@
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
     flake-parts.url = "github:hercules-ci/flake-parts";
-
     treefmt-nix.url = "github:numtide/treefmt-nix";
+
+    crane = {
+      url = "github:ipetkov/crane";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
+
     fenix = {
-      url = "github:nix-community/fenix/monthly";
+      url = "github:nix-community/fenix";
       inputs.nixpkgs.follows = "nixpkgs";
     };
   };
