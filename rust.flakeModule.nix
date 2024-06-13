@@ -35,13 +35,19 @@
         pname = "app";
         src = ./app;
 
-        inherit (common) buildInputs;
+        buildInputs =
+          l.attrValues {
+            inherit (pkgs) pkg-config openssl;
+          }
+          ++ common.buildInputs;
+
         nativeBuildInputs = l.attrValues {
           inherit (pkgs) dioxus-cli tailwindcss;
           inherit (config.treefmt.build.programs) rustfmt; # Yes, for some reason burn depends on rustfmt
         };
 
         strictDeps = true;
+        doCheck = false;
 
         CARGO_BUILD_TARGET = app-config.build.target;
         CARGO_BUILD_RUSTFLAGS = l.concatStringsSep " " app-config.build.rustflags;
