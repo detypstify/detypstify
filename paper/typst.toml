@@ -1,0 +1,10 @@
+[package]
+name = "detypstify"
+version = "0.1.0"
+license = "MIT"
+authors = [
+  "Justin Restivo <justin.restivo@yale.edu>",
+  "Jachym Putta <jachym.putta@yale.edu>"
+]
+description = "Using OCR to convert images of formulas into Typst code."
+repository = "https://github.com/detypstify/detypstify"

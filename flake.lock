@@ -109,7 +109,8 @@
         "fenix": "fenix",
         "flake-parts": "flake-parts",
         "nixpkgs": "nixpkgs",
-        "treefmt-nix": "treefmt-nix"
+        "treefmt-nix": "treefmt-nix",
+        "typst-packages": "typst-packages"
       }
     },
     "rust-analyzer-src": {
@@ -144,6 +145,22 @@
       "original": {
         "owner": "numtide",
         "repo": "treefmt-nix",
+        "type": "github"
+      }
+    },
+    "typst-packages": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1718268309,
+        "narHash": "sha256-LvjXoxJdFBQyqxXfYXqZicThxC8giISrwP2rp4jN+3A=",
+        "owner": "typst",
+        "repo": "packages",
+        "rev": "874415df83791485227ecd4a578c3dfb37148e9f",
+        "type": "github"
+      },
+      "original": {
+        "owner": "typst",
+        "repo": "packages",
         "type": "github"
       }
     }

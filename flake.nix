@@ -51,5 +51,10 @@
       url = "github:nix-community/fenix";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+
+    typst-packages = {
+      url = "github:typst/packages";
+      flake = false;
+    };
   };
 }
