@@ -1,25 +1,7 @@
 import tensorflow as tf
+from PIL import Image
+import numpy as np
 import os
-
-image_size = 160
-patch_size = 6
-num_patches = (image_size // patch_size) ** 2
-projection_dim = 512
-num_heads = 4
-transformer_units = [projection_dim * 2, projection_dim]
-transformer_layers = 8
-mlp_head_units = [2048, 1024]
-data_root = "/shared/new_dataset"
-vocab = open(os.path.join(data_root, "typst_vocab.txt")).readlines()
-
-word_to_index = {x.split('\n')[0]:i for i, x in enumerate(vocab)}
-word_to_index['#UNK'] = len(word_to_index)
-word_to_index['#START'] = len(word_to_index)
-word_to_index['#END'] = len(word_to_index)
-index_to_word = {y:x for x, y in word_to_index.items()}
-
-index_to_words = lambda Y: ' '.join(map(lambda x: properties['idx_to_char'][x], Y))
-
 
 def mlp(x, hidden_units, dropout_rate):
     for units in hidden_units:
@@ -58,7 +40,9 @@ class PatchEncoder(tf.keras.layers.Layer):
         return encoded
     
 
-def create_vit_classifier():
+def create_vit_classifier(image_size=160, patch_size=6, projection_dim=512, num_heads=4, transformer_layers=8):
+    num_patches = (image_size // patch_size) ** 2
+    transformer_units = [projection_dim * 2, projection_dim]
     inputs = tf.keras.Input(shape=(image_size, image_size, 1))
     
     patches = Patches(patch_size)(inputs)
@@ -180,7 +164,7 @@ class Captioner(tf.keras.Model):
                units=256, max_length=200, num_heads=1, dropout_rate=0.1):
     super().__init__()
     self.feature_extractor = feature_extractor
-
+    data_root = "/shared/new_dataset"
     vocab = open(os.path.join(data_root, "typst_vocab.txt")).readlines()
     self.word_to_index = {x.split('\n')[0]:i for i, x in enumerate(vocab)}
     self.word_to_index['#UNK'] = len(self.word_to_index)
@@ -237,9 +221,28 @@ class Captioner(tf.keras.Model):
 
     words = []
     for token in tokens[0, 1:-1]:
-        word = index_to_word[token.numpy()]
+        word = self.index_to_word[token.numpy()]
         words.append(word)
 
     result = tf.strings.reduce_join(words, axis=-1, separator=' ')
 
     return result.numpy().decode()
+
+class GenerateText(tf.keras.callbacks.Callback):
+  def __init__(self, test_dict, data_root = "/shared/new_dataset", image_size=160):
+    ex_path = test_dict[(400, 160)][0][0]
+    image_dir = os.path.join(data_root, 'images_processed')
+    image_dir = os.path.join(image_dir, ex_path)
+
+    self.image = Image.open(image_dir).convert('YCbCr')
+    self.image = self.image.resize((image_size, image_size))
+    self.image = np.asarray(self.image)[:,:,0][:,:,None]
+
+  def on_epoch_end(self, epochs=None, logs=None):
+    print()
+    print()
+    for t in (0.0, 0.5, 1.0):
+      result = self.model.simple_gen(self.image, temperature=t)
+      print(result)
+
+    print()

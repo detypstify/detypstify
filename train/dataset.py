@@ -3,12 +3,10 @@ import numpy as np
 import tensorflow as tf
 from PIL import Image
 
-data_root = "/shared/new_dataset"
-
 class TypstDataset:
-    def __init__(self, set='train', batch_size=32):
+    def __init__(self, data_root = "/shared/new_dataset", set='train', batch_size=32):
         self.data_root = data_root
-        self.set = 'train'
+        self.set = set
         self.batch_size = batch_size
         self.train_dict = np.load(os.path.join(data_root, set + '_buckets.npy'), allow_pickle=True).tolist()
         self.data_length = np.sum([len(self.train_dict[x]) for x in self.train_dict.keys()])

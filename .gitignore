@@ -5,3 +5,6 @@ build_artifacts/*
 .DS_Store
 venv
 dist
+result
+__pycache__
+tensorboard

@@ -5,9 +5,11 @@ import signal
 
 import tensorflow as tf
 print(tf.__version__)
+print("Num GPUs Available: ", len(tf.config.list_physical_devices('GPU')))
 
 from dataset import *
 from model import *
+from train import *
 
 def signal_handler(sig, frame):
     print("Ctrl-C pressed. Program paused. Press 'c' to continue and q to quit")
@@ -22,85 +24,8 @@ def signal_handler(sig, frame):
             print("Quitting program...")
             exit()
 
-def masked_loss(labels, preds):
-  loss = tf.nn.sparse_softmax_cross_entropy_with_logits(labels, preds)
 
-  mask = (labels != 0) & (loss < 1e8)
-  mask = tf.cast(mask, loss.dtype)
-
-  loss = loss * mask
-  loss = tf.reduce_sum(loss)/tf.reduce_sum(mask)
-
-  return loss
-
-
-def masked_acc(labels, preds):
-  mask = tf.cast(labels != 0, tf.float32)
-  preds = tf.argmax(preds, axis=-1)
-  labels = tf.cast(labels, tf.int64)
-  match = tf.cast(preds == labels, mask.dtype)
-  acc = tf.reduce_sum(match * mask) / tf.reduce_sum(mask)
-
-  return acc
-
-class GenerateText(tf.keras.callbacks.Callback):
-  def __init__(self):
-    ex_path = test_dict[(400, 160)][0][0]
-    image_dir = os.path.join(data_root, 'images_processed')
-    image_dir = os.path.join(image_dir, ex_path)
-
-    self.image = Image.open(image_dir).convert('YCbCr')
-    self.image = self.image.resize((image_size, image_size))
-    self.image = np.asarray(self.image)[:,:,0][:,:,None]
-
-  def on_epoch_end(self, epochs=None, logs=None):
-    print()
-    print()
-    for t in (0.0, 0.5, 1.0):
-      result = self.model.simple_gen(self.image, temperature=t)
-      print(result)
-
-    print()
-
-
-@tf.function
-def train(ds):
-    labels = ds[2]
-
-    with tf.GradientTape() as tape:
-        logits = model(ds[0], ds[1])
-
-        loss = tf.nn.sparse_softmax_cross_entropy_with_logits(labels, logits)
-
-        mask = (labels != 0) & (loss < 1e8)
-        mask = tf.cast(mask, loss.dtype)
-
-        loss = loss * mask
-        loss = tf.reduce_sum(loss) / tf.reduce_sum(mask)
-
-    grads = tape.gradient(loss, model.trainable_variables)
-    #(grads, _) = tf.clip_by_global_norm(grads, clip_norm=1.0)
-    optimizer.apply_gradients(zip(grads, model.trainable_variables))
-
-    return loss
-
-
-@tf.function
-def test(ds):
-    labels = ds[2]
-
-    with tf.GradientTape() as tape:
-        preds = model(ds[0], ds[1])
-
-        mask = tf.cast(labels != 0, tf.float32)
-        preds = tf.argmax(preds, axis=-1)
-        labels = tf.cast(labels, tf.int64)
-        match = tf.cast(preds == labels, mask.dtype)
-        acc = tf.reduce_sum(match * mask) / tf.reduce_sum(mask)
-
-    return acc
-
-signal.signal(signal.SIGINT, signal_handler)  # Register Ctrl-C handler
+# signal.signal(signal.SIGINT, signal_handler)  # Register Ctrl-C handler
 
 data_root = "/shared/new_dataset"
 
@@ -145,11 +70,11 @@ optimizer = tf.keras.optimizers.AdamW(learning_rate=learning_rate, weight_decay=
 
 
 writer = tf.summary.create_file_writer("tensorboard")
-g = GenerateText()
+g = GenerateText(test_dict)
 g.model = model
 g.on_epoch_end(0)
 
-callbacks = [GenerateText(), tf.keras.callbacks.EarlyStopping(patience=5, restore_best_weights=True)]
+callbacks = [GenerateText(test_dict), tf.keras.callbacks.EarlyStopping(patience=5, restore_best_weights=True)]
 
 for epoch in range(0, 1000000):
     print("epoch: ", epoch)
@@ -157,7 +82,7 @@ for epoch in range(0, 1000000):
     train_losses = []
     step = 0
     for ds_train in train_ds:
-        loss = train(ds_train)
+        loss = train(ds_train, model, optimizer)
         train_losses.append(loss)
         step += 1
 
@@ -168,7 +93,7 @@ for epoch in range(0, 1000000):
 
     test_accuracies = []
     for ds_test in test_ds:
-        accuracy = test(ds_test)
+        accuracy = test(ds_test, model)
         test_accuracies.append(accuracy)
 
     mean_accuracy_test = np.mean(test_accuracies)
