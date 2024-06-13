@@ -1,17 +1,13 @@
 #!/usr/bin/env python3
 
 import os
-import pandas as pd
-import torch
-from torch.utils.data import Dataset
-from PIL import Image
-from transformers import VisionEncoderDecoderModel, PreTrainedModel, TrOCRProcessor
-from sklearn.model_selection import train_test_split
-from torch.utils.data import DataLoader
-from datasets import load_metric
-from torch.optim import AdamW
-from tqdm.notebook import tqdm
 import signal
+
+import tensorflow as tf
+print(tf.__version__)
+
+from dataset import *
+from model import *
 
 def signal_handler(sig, frame):
     print("Ctrl-C pressed. Program paused. Press 'c' to continue and q to quit")
@@ -26,151 +22,160 @@ def signal_handler(sig, frame):
             print("Quitting program...")
             exit()
 
+def masked_loss(labels, preds):
+  loss = tf.nn.sparse_softmax_cross_entropy_with_logits(labels, preds)
+
+  mask = (labels != 0) & (loss < 1e8)
+  mask = tf.cast(mask, loss.dtype)
+
+  loss = loss * mask
+  loss = tf.reduce_sum(loss)/tf.reduce_sum(mask)
+
+  return loss
+
+
+def masked_acc(labels, preds):
+  mask = tf.cast(labels != 0, tf.float32)
+  preds = tf.argmax(preds, axis=-1)
+  labels = tf.cast(labels, tf.int64)
+  match = tf.cast(preds == labels, mask.dtype)
+  acc = tf.reduce_sum(match * mask) / tf.reduce_sum(mask)
+
+  return acc
+
+class GenerateText(tf.keras.callbacks.Callback):
+  def __init__(self):
+    ex_path = test_dict[(400, 160)][0][0]
+    image_dir = os.path.join(data_root, 'images_processed')
+    image_dir = os.path.join(image_dir, ex_path)
+
+    self.image = Image.open(image_dir).convert('YCbCr')
+    self.image = self.image.resize((image_size, image_size))
+    self.image = np.asarray(self.image)[:,:,0][:,:,None]
+
+  def on_epoch_end(self, epochs=None, logs=None):
+    print()
+    print()
+    for t in (0.0, 0.5, 1.0):
+      result = self.model.simple_gen(self.image, temperature=t)
+      print(result)
+
+    print()
+
+
+@tf.function
+def train(ds):
+    labels = ds[2]
+
+    with tf.GradientTape() as tape:
+        logits = model(ds[0], ds[1])
+
+        loss = tf.nn.sparse_softmax_cross_entropy_with_logits(labels, logits)
+
+        mask = (labels != 0) & (loss < 1e8)
+        mask = tf.cast(mask, loss.dtype)
+
+        loss = loss * mask
+        loss = tf.reduce_sum(loss) / tf.reduce_sum(mask)
+
+    grads = tape.gradient(loss, model.trainable_variables)
+    #(grads, _) = tf.clip_by_global_norm(grads, clip_norm=1.0)
+    optimizer.apply_gradients(zip(grads, model.trainable_variables))
+
+    return loss
+
+
+@tf.function
+def test(ds):
+    labels = ds[2]
+
+    with tf.GradientTape() as tape:
+        preds = model(ds[0], ds[1])
+
+        mask = tf.cast(labels != 0, tf.float32)
+        preds = tf.argmax(preds, axis=-1)
+        labels = tf.cast(labels, tf.int64)
+        match = tf.cast(preds == labels, mask.dtype)
+        acc = tf.reduce_sum(match * mask) / tf.reduce_sum(mask)
+
+    return acc
+
 signal.signal(signal.SIGINT, signal_handler)  # Register Ctrl-C handler
 
+data_root = "/shared/new_dataset"
 
-print(
-        "CUDA AVAILABILITY: " + str(torch.cuda.is_available())
-        )
+properties = np.load(os.path.join(data_root, 'properties.npy'), allow_pickle=True).tolist()
+vocab = open(os.path.join(data_root, "typst_vocab.txt")).readlines()
 
-print(
-        "CUDA VERSION: " + str(torch.version.cuda)
-        )
+word_to_index = {x.split('\n')[0]:i for i, x in enumerate(vocab)}
+word_to_index['#UNK'] = len(word_to_index)
+word_to_index['#START'] = len(word_to_index)
+word_to_index['#END'] = len(word_to_index)
 
-class TypstDataSet(Dataset):
-    def __init__(self, df, processor, max_target_length = 2048):
-        self.df = df
-        self.processor = processor
-        self.max_target_length = max_target_length
 
-    def __len__(self):
-        return len(self.df)
+image_size = 160
+patch_size = 6
+num_patches = (image_size // patch_size) ** 2
+projection_dim = 512
+num_heads = 4
+transformer_units = [projection_dim * 2, projection_dim]
+transformer_layers = 8
+mlp_head_units = [2048, 1024]
+set = 'test'
 
-    # add type signature
-    def __getitem__(self, idx):
-        file_name = self.df['file_name'][idx]
-        text = self.df['text'][idx]
-        image = Image.open(file_name).convert('RGB')
-        pixel_values = self.processor(image, return_tensors="pt").pixel_values
-        labels = self.processor.tokenizer(text, padding="max_length", max_length = self.max_target_length).input_ids
-        labels = [label if label != self.processor.tokenizer.pad_token_id else -100 for label in labels]
-        encoding = {"pixel_values" : pixel_values.squeeze(), "labels" : torch.tensor(labels)}
-        return encoding
+test_dict = np.load(os.path.join(data_root, set + '_buckets.npy'), allow_pickle=True).tolist()
+test_dict.keys()
+train_ds_gen = TypstDataset(set='train', batch_size=16) 
+train_ds = tf.data.Dataset.from_generator(train_ds_gen, (tf.float32, tf.int32, tf.int32))
 
-def read_in_dataset():
-    formulas = []
-    image_paths = []
-    image_path_prefix = "/shared/typst-detexify/scraper/OUT/images/"
-    path = "/shared/typst-detexify/scraper/OUT/out"
-    with open(path, 'r') as file:
-        lines = file.readlines()
-        i = 0
-        while i < len(lines):
-            formula = lines[i].strip()
-            # should always exist
-            j = i + 1
-            while lines[j].strip()[-3:] != 'svg':
-                formula += "\n" + lines[j].strip()
-                j += 1
-            i = j
-            image = lines[j].strip().split(',')[1]
-            image_png = image[0:-3] + 'png'
-            # check if the file exists on the filesystem
-            if os.path.exists(image_path_prefix + image_png):
-                # print("file: f{image_path_prefix + image}")
-                # print(image_png)
-                formulas.append(formula)
-                image_paths.append(image_path_prefix + image_png)
-            i = i + 1
+test_ds_gen = TypstDataset(set='test', batch_size=16) 
+test_ds = tf.data.Dataset.from_generator(test_ds_gen, (tf.float32, tf.int32, tf.int32))
 
-    df = pd.DataFrame({'text': formulas, 'file_name': image_paths})
-    print(f"SIZXE {df.size}")
-    print(f"FORMUALS {len(formulas)}")
-    print(f"IMPGAHTS {len(image_paths)}")
-    return df
+vit_classifier = create_vit_classifier()
 
-df = read_in_dataset()
-print(f"size: {df.size}")
-train_df, test_df = train_test_split(df, test_size = 0.2)
-train_df.reset_index(drop=True, inplace=True)
-test_df.reset_index(drop=True, inplace=True)
+vocabulary_size = len(word_to_index)
+output_layer = TokenOutput(vocabulary_size, banned_tokens=('', '#UNK', '#START'))
 
-processor = TrOCRProcessor.from_pretrained("microsoft/trocr-base-printed")
-train_dataset = TypstDataSet(df = train_df, processor = processor)
-eval_dataset = TypstDataSet(df = test_df, processor = processor)
-encoding = train_dataset[0]
-# for k,v in encoding.items():
-#     print(k, v.shape)
+model = Captioner(vocabulary_size, feature_extractor=create_vit_classifier(), output_layer=output_layer,
+                  units=256, dropout_rate=0.5, num_layers=4, num_heads=8)
 
-train_dataloader = DataLoader(train_dataset, batch_size=2, shuffle=True)
-eval_dataloader = DataLoader(eval_dataset, batch_size=2)
 
-device = torch.device("cuda")
-model = VisionEncoderDecoderModel.from_pretrained("microsoft/trocr-base-stage1")
-model.to(device)
-# set special tokens used for creating the decoder_input_ids from the labels
-model.config.decoder_start_token_id = processor.tokenizer.cls_token_id
-model.config.pad_token_id = processor.tokenizer.pad_token_id
-model.config.vocab_size = model.config.decoder.vocab_size
-model.config.eos_token_id = processor.tokenizer.sep_token_id
-model.config.max_length = 5000
-model.config.early_stopping = True
-model.config.no_repeat_ngram_size = 3
-model.config.length_penalty = 0.2
-model.config.num_beams = 4
+learning_rate = tf.keras.optimizers.schedules.PolynomialDecay(1e-4, int(100000 / 32.0 * 1000), 1e-6)
+optimizer = tf.keras.optimizers.AdamW(learning_rate=learning_rate, weight_decay=0.0001)
 
-cer_metric = load_metric("cer")
 
-def compute_cer(pred_ids, label_ids, p, metric):
-    pred_str = p.batch_decode(pred_ids, skip_special_tokens=True)
-    label_ids[label_ids == -100] = p.tokenizer.pad_token_id
-    label_str = p.batch_decode(label_ids, skip_special_tokens=True)
+writer = tf.summary.create_file_writer("tensorboard")
+g = GenerateText()
+g.model = model
+g.on_epoch_end(0)
 
-    cer = metric.compute(predictions=pred_str, references=label_str)
-    return cer
+callbacks = [GenerateText(), tf.keras.callbacks.EarlyStopping(patience=5, restore_best_weights=True)]
 
-optimizer = AdamW(model.parameters(), lr=5e-5)
+for epoch in range(0, 1000000):
+    print("epoch: ", epoch)
 
-for epoch in range(10):  # loop over the dataset multiple times
-    print("EPOCH: " + str(epoch))
-    # train
-    model.train()
-    train_loss = 0.0
-    # len = len(tqdm(train_dataloader))
-    batch_idx = 0
-    for batch in tqdm(train_dataloader):
-        batch_idx += 1
-        print(f"EPOCH : {str(epoch)}, batch {str(batch_idx)}")
-        # get the inputs
-        for k,v in batch.items():
-            batch[k] = v.to(device)
+    train_losses = []
+    step = 0
+    for ds_train in train_ds:
+        loss = train(ds_train)
+        train_losses.append(loss)
+        step += 1
 
-       # forward + backward + optimize
-        outputs = model(**batch)
-        loss = outputs.loss
-        print("BKCWARD")
-        loss.backward()
-        print("DONE")
-        optimizer.step()
-        optimizer.zero_grad()
+    model.save_weights('model/model_' + str(epoch))
 
-        train_loss += loss.item()
+    mean_loss_train = np.mean(train_losses)
+    mean_perp_train = np.mean(list(map(lambda x: np.power(np.e, x), train_losses)))
 
-    print(f"Loss after epoch {epoch}:", train_loss/len(train_dataloader))
+    test_accuracies = []
+    for ds_test in test_ds:
+        accuracy = test(ds_test)
+        test_accuracies.append(accuracy)
 
-    # evaluate
-    model.eval()
-    valid_cer = 0.0
-    with torch.no_grad():
-        for batch in tqdm(eval_dataloader):
-            # run batch generation
-            outputs = model.generate(batch["pixel_values"].to(device))
-            # compute metrics
-            cer = compute_cer(outputs, batch["labels"], processor, cer_metric)
-            valid_cer += cer
+    mean_accuracy_test = np.mean(test_accuracies)
 
-    print("Validation CER:", valid_cer / len(eval_dataloader))
-    model.save_pretrained(f"./{epoch + 1}")
-
-model.save_pretrained(".")
-
+    print("Mean train loss:", mean_loss_train, ", Mean train perplexity:", mean_perp_train, "Mean test Accuracy:", mean_accuracy_test)
+    with writer.as_default():
+        tf.summary.scalar("mean_loss_train", mean_loss_train, step=epoch)
+        tf.summary.scalar("mean_perp_train", mean_perp_train, step=epoch)
+        tf.summary.scalar("mean_accuracy_test", mean_accuracy_test, step=epoch)
+        writer.flush()
