@@ -15,22 +15,18 @@ default:
 [doc('Run all formatters')]
 fmt: app-format paper-format 
         nix fmt        
-
-[private]
-cd-app-root:
-        cd {{ app-root }}
         
 [group('app')]
-app-release: cd-app-root
-        dx build --release
+app-release:
+        cd {{ app-root }}; dx build --release
 
 [group('app')]
-app-watch: cd-app-root
-        dx serve --hot-reload
+app-watch:
+        cd {{ app-root }}; dx serve --hot-reload
 
 [group('app')]
-app-format: cd-app-root
-        dx fmt 
+app-format:
+       cd {{ app-root }}; dx fmt 
 
 [group('scraper')]
 scraper-run:
