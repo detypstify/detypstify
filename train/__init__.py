@@ -25,6 +25,7 @@ def signal_handler(sig, frame):
             print("Quitting program...")
             exit()
 
+
 class TypstDataSet(Dataset):
     def __init__(self, df, processor, max_target_length=2048):
         self.df = df
@@ -86,6 +87,7 @@ def read_in_dataset():
     print(f"IMPGAHTS {len(image_paths)}")
     return df
 
+
 def compute_cer(pred_ids, label_ids, p, metric):
     pred_str = p.batch_decode(pred_ids, skip_special_tokens=True)
     label_ids[label_ids == -100] = p.tokenizer.pad_token_id
@@ -95,7 +97,7 @@ def compute_cer(pred_ids, label_ids, p, metric):
     return cer
 
 
-def main():    
+def main():
     signal.signal(signal.SIGINT, signal_handler)  # Register Ctrl-C handler
 
     print("CUDA AVAILABILITY: " + str(torch.cuda.is_available()))
@@ -110,7 +112,7 @@ def main():
     processor = TrOCRProcessor.from_pretrained("microsoft/trocr-base-printed")
     train_dataset = TypstDataSet(df=train_df, processor=processor)
     eval_dataset = TypstDataSet(df=test_df, processor=processor)
-    encoding = train_dataset[0]
+    # encoding = train_dataset[0]
     # for k,v in encoding.items():
     #     print(k, v.shape)
 
