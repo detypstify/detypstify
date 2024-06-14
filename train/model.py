@@ -17,6 +17,7 @@ class Patches(tf.keras.layers.Layer):
 
     def call(self, images):
         batch_size = tf.shape(images)[0]
+        print("batch size is somethign " + batch_size)
         patches = tf.image.extract_patches(images=images, sizes=[1, self.patch_size, self.patch_size, 1],
             strides=[1, self.patch_size, self.patch_size, 1], rates=[1, 1, 1, 1], padding="VALID")
         

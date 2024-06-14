@@ -5,30 +5,12 @@ import signal
 
 import tensorflow as tf
 print(tf.__version__)
-print("Num GPUs Available: ", len(tf.config.list_physical_devices('GPU')))
 
 from dataset import *
 from model import *
 from train import *
 
-def signal_handler(sig, frame):
-    print("Ctrl-C pressed. Program paused. Press 'c' to continue and q to quit")
-    signal.signal(signal.SIGINT, signal.SIG_IGN)  # Ignore Ctrl-C during pause
-    while True:
-        user_input = input()
-        if user_input.lower() == 'c':
-            print("Resuming program...")
-            signal.signal(signal.SIGINT, signal_handler)  # Restore Ctrl-C handler
-            break
-        elif user_input == 'q':
-            print("Quitting program...")
-            exit()
-
-
-# signal.signal(signal.SIGINT, signal_handler)  # Register Ctrl-C handler
-
 data_root = "/shared/new_dataset"
-
 properties = np.load(os.path.join(data_root, 'properties.npy'), allow_pickle=True).tolist()
 vocab = open(os.path.join(data_root, "typst_vocab.txt")).readlines()
 
@@ -67,13 +49,7 @@ model = Captioner(vocabulary_size, feature_extractor=create_vit_classifier(), ou
 
 learning_rate = tf.keras.optimizers.schedules.PolynomialDecay(1e-4, int(100000 / 32.0 * 1000), 1e-6)
 optimizer = tf.keras.optimizers.AdamW(learning_rate=learning_rate, weight_decay=0.0001)
-
-
 writer = tf.summary.create_file_writer("tensorboard")
-# g = GenerateText(test_dict)
-# g.model = model
-# g.on_epoch_end(0)
-
 callbacks = [GenerateText(test_dict), tf.keras.callbacks.EarlyStopping(patience=5, restore_best_weights=True)]
 
 for epoch in range(0, 1000000):
