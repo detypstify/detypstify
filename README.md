@@ -20,7 +20,7 @@ cleaning the resulting data (see `scraper/`). The final dataset is available on
 [Kaggle](https://www.kaggle.com/datasets/jachymp/im2typst-230k).
 
 1. Download the dataset and unzip it
-2. Run `scripts/train_val_split.py` to perform a train validation split
+2. Run `poetry run train_val_split` to perform a train validation split
 3. Generate `formulas.txt` by running `scripts/mk_formulas_txt.sh` on the `train` and `val` directories
 4. Install `pix2tex`
     1. Follow the instructions to generate `tokenizer, train.pkl, val.pkl`

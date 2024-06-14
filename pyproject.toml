@@ -1,0 +1,27 @@
+[tool.poetry]
+name = "detypstify"
+version = "0.1.0"
+description = "Using OCR to convert images of formulas into Typst code."
+authors = ["Justin Restivo <justin.restivo@yale.edu>"]
+license = "MIT"
+readme = "README.md"
+packages = [{ include = "train" }, { include = "symbols2svg" }]
+
+[tool.poetry.scripts]
+train = "train:main"
+train_val_split = "train.val_split:main"
+symbols2svg = "symbols2svg:main"
+
+[tool.poetry.dependencies]
+python = "^3.11"
+torch = "^2.3.1"
+pandas = "^2.2.2"
+pillow = "^10.3.0"
+transformers = "^4.41.2"
+scikit-learn = "^1.5.0"
+datasets = "^2.19.2"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
