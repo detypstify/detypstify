@@ -71,11 +71,17 @@ class SeqEmbedding(tf.keras.layers.Layer):
     self.add = tf.keras.layers.Add()
 
   def call(self, seq):
-    seq = self.token_embedding(seq) # (batch, seq, depth)
+    seq = self.token_embedding(seq)  # (batch, seq, depth)
 
-    x = tf.range(tf.shape(seq)[1])  # (seq)
+    seq_length = tf.shape(seq)[1]
+    batch_size = tf.shape(seq)[0]
+
+    x = tf.range(seq_length)  # (seq)
     x = x[tf.newaxis, :]  # (1, seq)
     x = self.pos_embedding(x)  # (1, seq, depth)
+
+    # Tile x to match the batch size of seq
+    x = tf.tile(x, [batch_size, 1, 1])  # (batch, seq, depth)
 
     return self.add([seq, x])
 

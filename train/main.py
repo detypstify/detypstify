@@ -70,9 +70,9 @@ optimizer = tf.keras.optimizers.AdamW(learning_rate=learning_rate, weight_decay=
 
 
 writer = tf.summary.create_file_writer("tensorboard")
-g = GenerateText(test_dict)
-g.model = model
-g.on_epoch_end(0)
+# g = GenerateText(test_dict)
+# g.model = model
+# g.on_epoch_end(0)
 
 callbacks = [GenerateText(test_dict), tf.keras.callbacks.EarlyStopping(patience=5, restore_best_weights=True)]
 
