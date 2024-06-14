@@ -42,22 +42,22 @@ pub(crate) fn App() -> Element {
             href: "https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css"
         }
         section { class: "container max-w-fit",
-            div { id: "header",
+            div {
+                id: "header",
                 class: "flex flex-row sticky items-center justify-center z-10",
                 // img { src: "assets/logo.png", class: "w-24 h-24" }
                 h1 {
                     class: "text-4xl font-bold mb-4",
-                    style:"font-family:'0xProto Regular",
+                    style: "font-family:'0xProto Regular",
                     "Detypstify"
                 }
-            div {
-                class: "flex justify-center",
-                a {
-                    target: "_blank",
-                    href: "https://github.com/DieracDelta/detypstify",
-                    i { class: "fa fa-github", }
+                div { class: "flex justify-center",
+                    a {
+                        target: "_blank",
+                        href: "https://github.com/DieracDelta/detypstify",
+                        i { class: "fa fa-github" }
+                    }
                 }
-            }
             }
             div { class: "flex align-middle justify-center mb-4",
                 canvas {
@@ -65,12 +65,11 @@ pub(crate) fn App() -> Element {
                     class: "border border-gray-700 bg-gray-800",
                     width: "400",
                     height: "300",
-                    onmousedown:
-                    move |evt| {
-                      set_position(evt, pos_down.clone());
+                    onmousedown: move |evt| {
+                        set_position(evt, pos_down.clone());
                     },
-                    onmouseenter : move |evt| {
-                      set_position(evt, pos_enter.clone());
+                    onmouseenter: move |evt| {
+                        set_position(evt, pos_enter.clone());
                     },
                     onmouseup: move |_| {
                         set_output("out1", "1. 0");
@@ -79,7 +78,6 @@ pub(crate) fn App() -> Element {
                         let classifier_ = classifier.clone();
                         let pos_move_ = pos_move.clone();
                         async move {
-
                             let need_reprocess = draw(event, pos_move_);
                             let canvas = web_sys::window()
                                 .unwrap()
@@ -99,14 +97,15 @@ pub(crate) fn App() -> Element {
                                 .unwrap();
                             if need_reprocess {
                                 if let Some(processed_data) = process_data(&context) {
-                                    let results = inference(&classifier_, processed_data.as_slice()).await;
+                                    let results = inference(&classifier_, processed_data.as_slice())
+                                        .await;
                                     set_output("out1", &results[0].to_string());
                                     set_output("out2", &results[1].to_string());
                                     set_output("out3", &results[2].to_string());
                                 }
                             }
                         }
-                    },
+                    }
                 }
             }
             div { class: "flex align-middle justify-center mb-4",
@@ -116,38 +115,47 @@ pub(crate) fn App() -> Element {
                     tabindex: "0",
                     id: "btn",
                     onclick: move |_| {
-                        let canvas = web_sys::window().unwrap().document().unwrap()
-                            .get_element_by_id("canvas").unwrap();
-
+                        let canvas = web_sys::window()
+                            .unwrap()
+                            .document()
+                            .unwrap()
+                            .get_element_by_id("canvas")
+                            .unwrap();
                         let mut options = ContextAttributes2d::new();
                         options.will_read_frequently(true);
-                        let context =
-                            canvas.dyn_into::<web_sys::HtmlCanvasElement>()
-                            .unwrap().get_context_with_context_options("2d", &options).unwrap().unwrap()
-                            .dyn_into::<web_sys::CanvasRenderingContext2d>().unwrap();
+                        let context = canvas
+                            .dyn_into::<web_sys::HtmlCanvasElement>()
+                            .unwrap()
+                            .get_context_with_context_options("2d", &options)
+                            .unwrap()
+                            .unwrap()
+                            .dyn_into::<web_sys::CanvasRenderingContext2d>()
+                            .unwrap();
                         context.clear_rect(0.0, 0.0, 400.0, 300.0);
                         clear_outputs();
                     },
-                    style:"font-family:'0xProto Regular",
+                    style: "font-family:'0xProto Regular",
                     "Clear"
                 }
-                div { class: "flex justify-center mb-4 button-like",
-                  style:"font-family:'0xProto Regular",
-                  "Upload Image",
+                div {
+                    class: "flex justify-center mb-4 button-like",
+                    style: "font-family:'0xProto Regular",
+                    "Upload Image"
                     input {
                         r#type: "hidden",
                         id: "imageUpload",
                         accept: "image/*",
                         onchange: move |evt| {
                             async move {
-                                    if let Some(file_engine) = evt.files() {
+                                if let Some(file_engine) = evt.files() {
                                     let files = file_engine.files();
                                     for file_name in &files {
-                                        if let Some(bytes) = file_engine.read_file(file_name).await
-                                        {
+                                        if let Some(bytes) = file_engine.read_file(file_name).await {
                                             let _image = ImageReader::new(Cursor::new(bytes))
-                                                .with_guessed_format().unwrap()
-                                                .decode().unwrap();
+                                                .with_guessed_format()
+                                                .unwrap()
+                                                .decode()
+                                                .unwrap();
                                         }
                                     }
                                 }
@@ -217,20 +225,10 @@ fn clear_outputs() {
 #[component]
 fn OutputModel(name: String, num: String, formula: String) -> Element {
     rsx! {
-        div {
-            class: "flex justify-left",
-            h1 {
-                class: "text-2xl font-bold ",
-                "{num}"
-            }
-            p {
-                id : "{name}_formula",
-                class: "ml-8 mt-1",
-                "{formula}"
-            }
-            div {
-                id: "{name}_img",
-            },
+        div { class: "flex justify-left",
+            h1 { class: "text-2xl font-bold ", "{num}" }
+            p { id: "{name}_formula", class: "ml-8 mt-1", "{formula}" }
+            div { id: "{name}_img" }
         }
     }
 }

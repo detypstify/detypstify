@@ -9,16 +9,16 @@
 
 // Default font sizes from original LaTeX style file.
 #let font-defaults = (
-  tiny:	        7pt,
-  scriptsize:   7pt,
+  tiny: 7pt,
+  scriptsize: 7pt,
   footnotesize: 9pt,
-  small:        9pt,
-  normalsize:   10pt,
-  large:        14pt,
-  Large:        16pt,
-  LARGE:        20pt,
-  huge:         23pt,
-  Huge:         28pt,
+  small: 9pt,
+  normalsize: 10pt,
+  large: 14pt,
+  Large: 16pt,
+  LARGE: 20pt,
+  huge: 23pt,
+  Huge: 28pt,
 )
 
 // We prefer to use Times New Roman when ever it is possible.
@@ -54,15 +54,15 @@
   let body = {
     set text(size: font.normal)
     if caption_above {
-      v(1em, weak: true)  // Does not work at the block beginning.
+      v(1em, weak: true) // Does not work at the block beginning.
       it.caption
     }
     v(1em, weak: true)
     it.body
-    v(8pt, weak: true)  // Original 1em.
+    v(8pt, weak: true) // Original 1em.
     if not caption_above {
       it.caption
-      v(1em, weak: true)  // Does not work at the block ending.
+      v(1em, weak: true) // Does not work at the block ending.
     }
   }
 
@@ -76,7 +76,7 @@
 #let anonymous-author = (
   name: "Anonymous Author(s)",
   email: "anon.email@example.org",
-  affl: ("anonymous-affl", ),
+  affl: ("anonymous-affl",),
 )
 
 #let anonymous-affl = (
@@ -161,10 +161,9 @@
   // Render author name.
   let name = format-author-name(author, affl2idx)
   // Render affilations.
-  let affilation = affl
-    .map(it => format-afflilation(affls.at(it)))
-    .map(it => box(it))
-    .join(" ")
+  let affilation = affl.map(it => format-afflilation(
+    affls.at(it),
+  )).map(it => box(it)).join(" ")
 
   let lines = (name, affilation)
   if "email" in author {
@@ -179,9 +178,11 @@
 }
 
 #let make-two-authors(authors, affls, affl2idx) = {
-  let row = authors
-    .map(it => make-single-author(it, affls, affl2idx))
-    .map(it => box(it))
+  let row = authors.map(it => make-single-author(
+    it,
+    affls,
+    affl2idx,
+  )).map(it => box(it))
   return align(center, grid(columns: (1fr, 1fr), gutter: 2em, ..row))
 }
 
@@ -194,39 +195,49 @@
   }
 
   // Concatenate all author names with affilation superscripts.
-  let names = authors
-    .map(it => format-author-name(it, affl2idx, affilated: true))
+  let names = authors.map(it => format-author-name(
+    it,
+    affl2idx,
+    affilated: true,
+  ))
 
   // Concatenate all affilations with superscripts.
-  let affilations = affl2idx
-    .pairs()
-    .map(it => format-affl(affls, ..it))
+  let affilations = affl2idx.pairs().map(it => format-affl(affls, ..it))
 
   // Concatenate all emails to a single paragraph.
-  let emails = authors
-    .filter(it => "email" in it)
-    .map(it => box(link("mailto:" + it.email, raw(it.email))))
+  let emails = authors.filter(it => "email" in it).map(it => box(
+    link("mailto:" + it.email, raw(it.email)),
+  ))
 
   // Combine paragraph pieces to single array, then filter and join to
   // paragraphs.
-  let paragraphs = (names, affilations, emails)
-    .filter(it => it.len() > 0)
-    .map(it => it.join(h(1em, weak: true)))
-    .join([#parbreak() ])
+  let paragraphs = (
+    names,
+    affilations,
+    emails,
+  ).filter(it => it.len() > 0).map(it => it.join(
+    h(1em, weak: true),
+  )).join([#parbreak() ])
 
-  return align(center, {
-    pad(left: 1em, right: 1em, paragraphs)
-  })
+  return align(
+    center,
+    {
+      pad(left: 1em, right: 1em, paragraphs)
+    },
+  )
 }
 
 #let make-authors(authors, affls) = {
   // Prepare authors and footnote anchors.
   let ordered-affls = authors.map(it => it.affl).flatten().dedup()
-  let affl2idx = ordered-affls.enumerate(start: 1).fold((:), (acc, it) => {
-    let (ix, affl) = it
-    acc.insert(affl, ix)
-    return acc
-  })
+  let affl2idx = ordered-affls.enumerate(start: 1).fold(
+    (:),
+    (acc, it) => {
+      let (ix, affl) = it
+      acc.insert(affl, ix)
+      return acc
+    },
+  )
 
   if authors.len() == 1 {
     return make-single-author(authors.at(0), affls, affl2idx)
@@ -271,8 +282,7 @@
 
   set page(
     paper: "us-letter",
-    margin: (left: 1.5in, right: 1.5in,
-             top: 1.0in, bottom: 1in),
+    margin: (left: 1.5in, right: 1.5in, top: 1.0in, bottom: 1in),
     footer-descent: 25pt - font.normal,
     footer: locate(loc => {
       let i = counter(page).at(loc).first()
@@ -300,13 +310,13 @@
   // Configure quotation (similar to LaTeX's `quoting` package).
   show quote: set align(left)
   show quote: set pad(x: 4em)
-  show quote: set block(spacing: 1em)  // Original 11pt.
+  show quote: set block(spacing: 1em) // Original 11pt.
 
   // Configure spacing code snippets as in the original LaTeX.
-  show raw.where(block: true): set block(spacing: 14pt)  // TODO: May be 15pt?
+  show raw.where(block: true): set block(spacing: 14pt) // TODO: May be 15pt?
 
   // Configure bullet lists.
-  show list: set block(spacing: 15pt)  // Original unknown.
+  show list: set block(spacing: 15pt) // Original unknown.
   set list(
     indent: 30pt,  // Original 3pc (=36pt) without bullet.
     spacing: 8.5pt)
@@ -315,7 +325,8 @@
   set footnote.entry(
     separator: line(length: 2in, stroke: 0.5pt),
     clearance: 6.65pt,
-    indent: 12pt)  // Original 11pt.
+    indent: 12pt,
+  ) // Original 11pt.
 
   // Configure heading appearence and numbering.
   set heading(numbering: "1.1")
@@ -328,26 +339,38 @@
     set align(left)
     if it.level == 1 {
       // TODO: font.large?
-      text(size: 12pt, weight: "bold", {
-        let ex = 7.95pt
-        v(2.7 * ex, weak: true)
-        [#number *#it.body*]
-        v(2 * ex, weak: true)
-      })
+      text(
+        size: 12pt,
+        weight: "bold",
+        {
+          let ex = 7.95pt
+          v(2.7 * ex, weak: true)
+          [#number *#it.body*]
+          v(2 * ex, weak: true)
+        },
+      )
     } else if it.level == 2 {
-      text(size: font.normal, weight: "bold", {
-        let ex = 6.62pt
-        v(2.70 * ex, weak: true)
-        [#number *#it.body*]
-        v(2.03 * ex, weak: true)  // Original 1ex.
-      })
+      text(
+        size: font.normal,
+        weight: "bold",
+        {
+          let ex = 6.62pt
+          v(2.70 * ex, weak: true)
+          [#number *#it.body*]
+          v(2.03 * ex, weak: true) // Original 1ex.
+        },
+      )
     } else if it.level == 3 {
-      text(size: font.normal, weight: "bold", {
-        let ex = 6.62pt
-        v(2.6 * ex, weak: true)
-        [#number *#it.body*]
-        v(1.8 * ex, weak: true)  // Original -1em.
-      })
+      text(
+        size: font.normal,
+        weight: "bold",
+        {
+          let ex = 6.62pt
+          v(2.6 * ex, weak: true)
+          [#number *#it.body*]
+          v(1.8 * ex, weak: true) // Original -1em.
+        },
+      )
     }
   }
 
@@ -367,9 +390,9 @@
     if el != none and el.func() == eq {
       let numb = numbering(
         "1",
-        ..counter(eq).at(el.location())
+        ..counter(eq).at(el.location()),
       )
-      let color = rgb(0%, 8%, 45%)  // Originally `mydarkblue`. :D
+      let color = rgb(0%, 8%, 45%) // Originally `mydarkblue`. :D
       let content = link(el.location(), text(fill: color, numb))
       [(#content)]
     } else {
@@ -385,61 +408,76 @@
     it.body
   }
   show figure.where(kind: "algorithm"): it => {
-    place(top, float: true,
-      block(breakable: false, width: 100%, {
-        set block(spacing: 0em)
-        line(length: 100%, stroke: (thickness: 0.08em))
-        block(spacing: 0.4em, it.caption)  // NOTE: No idea why we need it.
-        line(length: 100%, stroke: (thickness: 0.05em))
-        it.body
-        line(length: 100%, stroke: (thickness: 0.08em))
-      })
+    place(
+      top,
+      float: true,
+      block(
+        breakable: false,
+        width: 100%,
+        {
+          set block(spacing: 0em)
+          line(length: 100%, stroke: (thickness: 0.08em))
+          block(spacing: 0.4em, it.caption) // NOTE: No idea why we need it.
+          line(length: 100%, stroke: (thickness: 0.05em))
+          it.body
+          line(length: 100%, stroke: (thickness: 0.08em))
+        },
+      ),
     )
   }
 
   // Render title.
-  block(width: 5.5in, {
-    // We need to define line widths to reuse them in spacing.
-    let top-rule-width = 4pt
-    let bot-rule-width = 1pt
+  block(
+    width: 5.5in,
+    {
+      // We need to define line widths to reuse them in spacing.
+      let top-rule-width = 4pt
+      let bot-rule-width = 1pt
 
-    // Add some space based on line width.
-    v(0.1in + top-rule-width / 2)
-    line(length: 100%, stroke: top-rule-width + black)
-    align(center, text(size: 17pt, weight: "bold", [#title]))
-    v(-bot-rule-width)
-    line(length: 100%, stroke: bot-rule-width + black)
-  })
+      // Add some space based on line width.
+      v(0.1in + top-rule-width / 2)
+      line(length: 100%, stroke: top-rule-width + black)
+      align(center, text(size: 17pt, weight: "bold", [#title]))
+      v(-bot-rule-width)
+      line(length: 100%, stroke: bot-rule-width + black)
+    },
+  )
 
   v(0.25in)
 
   // Render authors.
-  block(width: 100%, {
-    set text(size: font.normal)
-    set par(leading: 4.5pt)
-    show par: set block(spacing: 1.0em)  // Original 11pt.
-    make-authors(authors, affls)
-    v(0.3in - 0.1in)
-  })
+  block(
+    width: 100%,
+    {
+      set text(size: font.normal)
+      set par(leading: 4.5pt)
+      show par: set block(spacing: 1.0em) // Original 11pt.
+      make-authors(authors, affls)
+      v(0.3in - 0.1in)
+    },
+  )
 
   // Vertical spacing between authors and abstract.
-  v(6.5pt)  // Original 0.075in.
+  v(6.5pt) // Original 0.075in.
 
   // Render abstract.
-  block(width: 100%, {
-    set text(size: 10pt)
-    set text(size: font.normal)
-    set par(leading: 0.43em)  // Original 0.55em (or 0.45em?).
+  block(
+    width: 100%,
+    {
+      set text(size: 10pt)
+      set text(size: font.normal)
+      set par(leading: 0.43em) // Original 0.55em (or 0.45em?).
 
-    // NeurIPS instruction tels that font size of `Abstract` must equal to 12pt
-    // but there is not predefined font size.
-    align(center, text(size: 12pt)[*Abstract*])
-    v(0.215em)  // Original 0.5ex.
-    pad(left: 0.5in, right: 0.5in, abstract)
-    v(0.43em)  // Original 0.5ex.
-  })
+      // NeurIPS instruction tels that font size of `Abstract` must equal to 12pt
+      // but there is not predefined font size.
+      align(center, text(size: 12pt)[*Abstract*])
+      v(0.215em) // Original 0.5ex.
+      pad(left: 0.5in, right: 0.5in, abstract)
+      v(0.43em) // Original 0.5ex.
+    },
+  )
 
-  v(0.43em / 2)  // No idea.
+  v(0.43em / 2) // No idea.
 
   // Render main body
   {
@@ -447,7 +485,7 @@
     set text(size: font.normal)
     set par(leading: 0.55em)
     set par(leading: 0.43em)
-    show par: set block(spacing: 1.0em)  // Original 11pt.
+    show par: set block(spacing: 1.0em) // Original 11pt.
     body
 
     // Display the bibliography, if any is given.
