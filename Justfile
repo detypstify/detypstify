@@ -25,7 +25,7 @@ app-release:
 
 [group('app')]
 app-watch:
-        cd {{ app-root }}; dx serve --hot-reload
+        cd {{ app-root }}; dx serve --hot-reload --profile=dev
 
 [group('app')]
 app-format:

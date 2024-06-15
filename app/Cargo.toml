@@ -54,3 +54,18 @@ features = [
   'SvgGraphicsElement',
   "SvgsvgElement"
 ]
+
+[profile.dev]
+opt-level = "s"
+overflow-checks = false
+debug-assertions = false
+debug = false
+lto = false
+panic = "abort"
+incremental = true
+
+
+# debug = "none"
+
+
+
