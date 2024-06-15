@@ -1,4 +1,4 @@
-name: "Format"
+name: "Formatting"
 
 on:
   pull_request:
@@ -8,22 +8,16 @@ on:
   workflow_dispatch:
 
 jobs:
-  builds:
-    name: Build configuration
+  format:
+    name: Format Project
     runs-on: ubuntu-latest
+    permissions:
+      id-token: "write"
+      contents: "write"
     steps:
-    - uses: actions/checkout@v4.1.6
-      with:
-        fetch-depth: 0 # Nix Flakes doesn't work on shallow clones
-    - uses: cachix/install-nix-action@V27
-      with:
-        install_url: https://releases.nixos.org/nix/nix-2.13.3/install
-        extra_nix_config: |
-          experimental-features = nix-command flakes
-    - uses: cachix/cachix-action@v15
-      with:
-        name: jrestivo
-        authToken: '${{ secrets.CACHIX_AUTH_TOKEN }}'
-    - run: |
-        cd app
-        nix develop -c cargo fmt --check
+      - uses: actions/checkout@v4
+      - uses: DeterminateSystems/nix-installer-action@main
+      - uses: DeterminateSystems/magic-nix-cache-action@main
+      - uses: DeterminateSystems/flake-checker-action@main
+      - run: |
+          nix develop -c just fmt

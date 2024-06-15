@@ -8,7 +8,7 @@ edition = "2021"
 
 [dependencies]
 
-dioxus = { version = "0.5.1", features = ["web"] }
+dioxus = { git = "https://github.com/DioxusLabs/dioxus", branch = "main", features = ["web"] }
 burn = { git = "https://github.com/tracel-ai/burn.git", branch = "main", features = ["ndarray"], default-features=false }
 burn-wgpu = { git = "https://github.com/tracel-ai/burn.git", branch = "main", default-features = false}
 burn-candle = { git = "https://github.com/tracel-ai/burn.git", branch = "main", default-features = false}
@@ -54,3 +54,18 @@ features = [
   'SvgGraphicsElement',
   "SvgsvgElement"
 ]
+
+[profile.dev]
+opt-level = "s"
+overflow-checks = false
+debug-assertions = false
+debug = false
+lto = false
+panic = "abort"
+incremental = true
+
+
+# debug = "none"
+
+
+
