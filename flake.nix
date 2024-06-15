@@ -16,11 +16,11 @@
                               src = prev.fetchFromGitHub {
                                 owner = "DioxusLabs";
                                 repo = "dioxus";
-                                rev = "v0.5.1";
-                                hash = "sha256-S2yX/cZk+VaiTr6TLCU7/LmusKsD1T/CXqCJqohk/Eo=";
+                                rev = "main";
+                                hash = "sha256-xWAnDZcNhVLa8PckWGxk8gU6qihb87e/aTfoKls5KL8=";
                               };
 
-                              cargoHash = "sha256-ANWd1WW3xJxYH/iPqslnfEpaXJNHMfIgmdldoshl4Is=";
+                              cargoHash = "sha256-ox1QtI9qUwKfN8SjIRQSD3rS/ZyKuQ07vC71YABEHoQ=";
 
                               nativeBuildInputs = with prev.pkgs; [ pkg-config cacert ];
                               buildInputs = [ prev.pkgs.openssl ] ++ lib.optionals prev.stdenv.isDarwin [
