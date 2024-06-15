@@ -77,7 +77,7 @@ fn process_text_mods(s: String) -> Option<String> {
         || s.contains(r"\raisebox")
         || s.contains(r"\vphantom")
         || s.contains(r"\textup")
-        || s.contains(r"`")
+        || s.contains('`')
         || s.contains(r"\mit ")
         || s.contains(r"\do ")
         || s.contains(r"\em ")
@@ -101,7 +101,7 @@ fn nuke_trailing(mut s: String) -> Option<String> {
 
 fn process_table(s: String) -> Option<String> {
     let regex = Regex::new(r"\\begin\{array\}\s+\{[\sclr]*\}").unwrap();
-    let result = regex.replace_all(&s, |caps: &Captures| caps[0].replace(" ", ""));
+    let result = regex.replace_all(&s, |caps: &Captures| caps[0].replace(' ', ""));
     Some(result.to_string())
 }
 
@@ -133,7 +133,7 @@ fn process_hspace(s: String) -> Option<String> {
     let regex = Regex::new(r"(\\hspace\s*)\{([0-9a-z\s]*)\}").unwrap();
     let result = regex
         .replace_all(&s, |caps: &Captures| {
-            format!("{} {{ {:} }}", &caps[1], caps[2].replace(" ", ""))
+            format!("{} {{ {:} }}", &caps[1], caps[2].replace(' ', ""))
         })
         .to_string();
 
@@ -221,7 +221,7 @@ fn main() {
     std::fs::create_dir_all(FORMULA_DIR).unwrap();
 
     // remove the file if it already exists
-    if let Err(e) = std::fs::remove_file(&OUTFILE) {
+    if let Err(e) = std::fs::remove_file(OUTFILE) {
         if e.kind() != std::io::ErrorKind::NotFound {
             // Handle the error if it's not "file not found."
             panic!("Failed to remove file: {:?}", e);
@@ -232,7 +232,8 @@ fn main() {
     let mut out_file = std::fs::OpenOptions::new()
         .write(true)
         .create(true)
-        .open(&OUTFILE)
+        .truncate(true)
+        .open(OUTFILE)
         .unwrap();
 
     let their_file = std::fs::File::open(FILE_TO_READ).unwrap();
@@ -243,7 +244,7 @@ fn main() {
     let mut fail_parse = 0;
     let mut fail_with_parse = 0;
 
-    std::io::BufReader::new(their_file).lines().enumerate().into_iter().for_each(|(idx, line_wrap)| {
+    std::io::BufReader::new(their_file).lines().enumerate().for_each(|(idx, line_wrap)| {
         let uid = gen_uid(idx);
         // get the line
         let Ok(line) = line_wrap else {
@@ -339,8 +340,6 @@ fn main() {
                                     fail_with_parse += 1;
                                     // println!("ERROR");
                                 }
-
-                                return;
                             }
                             Err(_e) => {
                                 fail_with_parse += 1;
@@ -360,7 +359,6 @@ fn main() {
                 fail_with_parse += 1;
                 // println!("ERROR");
                 // println!("err {e}");
-                return;
             }
         }
 

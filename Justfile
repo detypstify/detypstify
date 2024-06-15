@@ -13,9 +13,12 @@ default:
         @just --list --unsorted
 
 [doc('Run all formatters')]
-fmt: app-format paper-format 
-        nix fmt        
-        
+fmt: app-format paper-format
+        nix fmt
+
+[doc('Run all formatters')]
+lint: app-lint scraper-lint
+
 [group('app')]
 app-release:
         cd {{ app-root }}; dx build --release
@@ -26,12 +29,20 @@ app-watch:
 
 [group('app')]
 app-format:
-       cd {{ app-root }}; dx fmt 
+       cd {{ app-root }}; dx fmt
+
+[group('app')]
+app-lint:
+        cd app && cargo clippy --target wasm32-unknown-unknown
+
+[group('scraper')]
+scraper-lint:
+        cargo clippy -p scraper
 
 [group('scraper')]
 scraper-run:
         cargo run -p scraper
-        
+
 [group('scraper')]
 scraper-build:
         cargo build -p scraper
@@ -47,19 +58,19 @@ train_val_split:
 [group('training')]
 symbols2svg:
         poetry run symbols2svg
-        
+
 [group('paper')]
 paper-preview:
         typst-preview --root {{ paper-root }} {{ paper-src }}
 
 [group('paper')]
-paper-build: 
+paper-build:
         typst compile {{ paper-src }} {{ paper-out }}
 
 [group('paper')]
-paper-watch: 
+paper-watch:
         typst watch {{ paper-src }} {{ paper-out }}
 
-[group('paper')]          
-paper-format: 
-        typstyle -i format-all 
+[group('paper')]
+paper-format:
+        typstyle -i format-all
