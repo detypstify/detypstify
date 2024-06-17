@@ -1,6 +1,6 @@
 root := justfile_directory()
 
-app-root := root / 'app'
+app-root := root / 'apps' / 'web-dioxus'
 
 paper-root := root / 'paper'
 paper-src := paper-root / 'main.typ'

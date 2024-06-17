@@ -1,4 +1,6 @@
 [workspace]
 members = ["scraper"] 
-exclude = ["app"]  # "app" is a wasm-target, so for now it should be excluded
 resolver = "2"
+
+# NOTE: WASM-only targets don't play well with Cargo in workspaces as of now +breaks-tooling
+exclude = ["apps/web-dioxus"]  

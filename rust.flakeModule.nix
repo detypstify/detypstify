@@ -29,11 +29,11 @@
 
     # NOTE: App is not part of the workspace
     packages.app = let
-      app-config = l.fromTOML (l.readFile ./app/.cargo/config.toml);
+      app-config = l.fromTOML (l.readFile ./apps/web-dioxus/.cargo/config.toml);
     in
       craneLib.buildPackage {
         pname = "app";
-        src = ./app;
+        src = ./apps/web-dioxus;
 
         buildInputs =
           l.attrValues {
