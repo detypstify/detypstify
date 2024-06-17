@@ -53,16 +53,16 @@
         CARGO_BUILD_RUSTFLAGS = l.concatStringsSep " " app-config.build.rustflags;
       };
 
-    packages.scraper = craneLib.buildPackage {
-      pname = "scraper";
-      version = readPackageVersion ./scraper/Cargo.toml;
+    packages.dataset = craneLib.buildPackage {
+      pname = "dataset";
+      version = readPackageVersion ./dataset/Cargo.toml;
       src = l.fileset.toSource {
         root = ./.;
         fileset = l.fileset.unions [
           ./Cargo.toml
           ./Cargo.lock
 
-          ./scraper
+          ./crates/dataset
         ];
       };
 
