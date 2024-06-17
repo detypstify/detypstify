@@ -16,10 +16,6 @@
 
     craneLib = (inputs.crane.mkLib pkgs).overrideToolchain toolchain;
 
-    # HACK: Workspace package versions don't seem to be detected by crane
-    readPackageVersion = file:
-      (l.fromTOML (l.readFile file)).package.version;
-
     common.buildInputs = l.optionals pkgs.stdenv.isDarwin (l.attrValues {
       inherit (pkgs) libiconv;
       inherit (pkgs.darwin.apple_sdk.frameworks) SystemConfiguration;
@@ -29,11 +25,28 @@
 
     # NOTE: App is not part of the workspace
     packages.app = let
-      app-config = l.fromTOML (l.readFile ./app/.cargo/config.toml);
+      app-config = l.fromTOML (l.readFile ./apps/web-dioxus/.cargo/config.toml);
+
+      dioxus-cli = pkgs.dioxus-cli.overrideAttrs (ol: rec {
+        src = pkgs.fetchFromGitHub {
+          owner = "DioxusLabs";
+          repo = "dioxus";
+          rev = "487570d89751b34bbfd5e9b5ff1e0fd3780bf332";
+          sha256 = "xWAnDZcNhVLa8PckWGxk8gU6qihb87e/aTfoKls5KL8=";
+        };
+
+        buildAndTestSubdir = "./packages/cli";
+
+        cargoDeps = ol.cargoDeps.overrideAttrs (l.const {
+          name = "dioxus-cli-vendor.tar.gz";
+          inherit src;
+          outputHash = "sha256-ox1QtI9qUwKfN8SjIRQSD3rS/ZyKuQ07vC71YABEHoQ=";
+        });
+      });
     in
       craneLib.buildPackage {
         pname = "app";
-        src = ./app;
+        src = ./apps/web-dioxus;
 
         buildInputs =
           l.attrValues {
@@ -42,7 +55,8 @@
           ++ common.buildInputs;
 
         nativeBuildInputs = l.attrValues {
-          inherit (pkgs) dioxus-cli tailwindcss;
+          inherit dioxus-cli;
+          inherit (pkgs) tailwindcss;
           inherit (config.treefmt.build.programs) rustfmt; # Yes, for some reason burn depends on rustfmt
         };
 
@@ -53,27 +67,8 @@
         CARGO_BUILD_RUSTFLAGS = l.concatStringsSep " " app-config.build.rustflags;
       };
 
-    packages.scraper = craneLib.buildPackage {
-      pname = "scraper";
-      version = readPackageVersion ./scraper/Cargo.toml;
-      src = l.fileset.toSource {
-        root = ./.;
-        fileset = l.fileset.unions [
-          ./Cargo.toml
-          ./Cargo.lock
-
-          ./scraper
-        ];
-      };
-
-      inherit (common) buildInputs;
-
-      strictDeps = true;
-      cargoExtraArgs = "-p scraper";
-    };
-
     devShells.rust = pkgs.mkShell {
-      inputsFrom = [config.packages.app config.packages.scraper];
+      inputsFrom = [config.packages.app];
       packages = l.attrValues {
         inherit (pkgs) tailwindcss-language-server;
         inherit (fenix) rust-analyzer;

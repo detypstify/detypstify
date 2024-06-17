@@ -1,0 +1,69 @@
+[package]
+name = "app"
+version = "0.1.0"
+authors = ["Jachym Putta <jachym.putta@yale.edu>"]
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+dioxus = { git = "https://github.com/DioxusLabs/dioxus", branch = "main", features = ["web"] }
+image = "0.25.1"
+
+# HACK: Till we're able to get web-dioxus into the Cargo workspace
+compiler = { path = "../../crates/compiler" }
+
+# Inference
+burn = { git = "https://github.com/tracel-ai/burn.git", branch = "main", features = ["ndarray"], default-features=false }
+burn-wgpu = { git = "https://github.com/tracel-ai/burn.git", branch = "main", default-features = false}
+burn-candle = { git = "https://github.com/tracel-ai/burn.git", branch = "main", default-features = false}
+
+# WASM
+js-sys = "0.3.69"
+wasm-bindgen = "0.2.92"
+wasm-bindgen-futures = "0.4.42"
+
+# Debug
+tracing = "0.1.40"
+dioxus-logger = "0.5.1"
+manganis = "0.2.2"
+
+[build-dependencies]
+burn-import = { git = "https://github.com/tracel-ai/burn.git", branch = "main", default-features = false, features = ["onnx"] }
+
+[dependencies.web-sys]
+version = "0.3.69"
+features = [
+  'CanvasRenderingContext2d',
+  'Document',
+  'Element',
+  'HtmlCanvasElement',
+  'Window',
+  'ImageData',
+  'BlobPropertyBag',
+  'Url',
+  'Navigator',
+  'ContextAttributes2d',
+  'Gpu',
+  'DomParser',
+  'SupportedType',
+  'SvgRect',
+  'SvgBoundingBoxOptions',
+  'SvgGraphicsElement',
+  "SvgsvgElement"
+]
+
+[profile.dev]
+opt-level = "s"
+overflow-checks = false
+debug-assertions = false
+debug = false
+lto = false
+panic = "abort"
+incremental = true
+
+
+# debug = "none"
+
+
+

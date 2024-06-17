@@ -1,6 +1,6 @@
 root := justfile_directory()
 
-app-root := root / 'app'
+app-root := root / 'apps' / 'web-dioxus'
 
 paper-root := root / 'paper'
 paper-src := paper-root / 'main.typ'
@@ -16,9 +16,18 @@ default:
 fmt: app-format paper-format
         nix fmt
 
-[doc('Run all formatters')]
-lint: app-lint scraper-lint
+[doc('Run all linters')]
+lint: app-lint clippy
 
+[group('rust')]
+clippy: 
+        cargo clippy --all --all-targets --all-features
+        
+[group('rust')]
+[no-exit-message]
+cargo-build package *args:
+        cargo build -p {{ package }} {{ args }}
+        
 [group('app')]
 app-release:
         cd {{ app-root }}; dx build --release
@@ -33,19 +42,7 @@ app-format:
 
 [group('app')]
 app-lint:
-        cd app && cargo clippy --target wasm32-unknown-unknown
-
-[group('scraper')]
-scraper-lint:
-        cargo clippy -p scraper
-
-[group('scraper')]
-scraper-run:
-        cargo run -p scraper
-
-[group('scraper')]
-scraper-build:
-        cargo build -p scraper
+        cd {{ app-root }}; cargo clippy --target wasm32-unknown-unknown
 
 [group('training')]
 train:
