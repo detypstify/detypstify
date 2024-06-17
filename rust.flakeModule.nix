@@ -16,10 +16,6 @@
 
     craneLib = (inputs.crane.mkLib pkgs).overrideToolchain toolchain;
 
-    # HACK: Workspace package versions don't seem to be detected by crane
-    readPackageVersion = file:
-      (l.fromTOML (l.readFile file)).package.version;
-
     common.buildInputs = l.optionals pkgs.stdenv.isDarwin (l.attrValues {
       inherit (pkgs) libiconv;
       inherit (pkgs.darwin.apple_sdk.frameworks) SystemConfiguration;
@@ -71,27 +67,8 @@
         CARGO_BUILD_RUSTFLAGS = l.concatStringsSep " " app-config.build.rustflags;
       };
 
-    packages.dataset = craneLib.buildPackage {
-      pname = "dataset";
-      version = readPackageVersion ./crates/dataset/Cargo.toml;
-      src = l.fileset.toSource {
-        root = ./.;
-        fileset = l.fileset.unions [
-          ./Cargo.toml
-          ./Cargo.lock
-
-          ./crates/dataset
-        ];
-      };
-
-      inherit (common) buildInputs;
-
-      strictDeps = true;
-      cargoExtraArgs = "-p dataset";
-    };
-
     devShells.rust = pkgs.mkShell {
-      inputsFrom = [config.packages.app config.packages.dataset];
+      inputsFrom = [config.packages.app];
       packages = l.attrValues {
         inherit (pkgs) tailwindcss-language-server;
         inherit (fenix) rust-analyzer;

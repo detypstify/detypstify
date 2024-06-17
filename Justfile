@@ -17,8 +17,12 @@ fmt: app-format paper-format
         nix fmt
 
 [doc('Run all linters')]
-lint: app-lint
+lint: app-lint clippy
 
+[group('rust')]
+clippy: 
+        cargo clippy --all --all-targets --all-features
+        
 [group('app')]
 app-release:
         cd {{ app-root }}; dx build --release
