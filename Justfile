@@ -23,6 +23,11 @@ lint: app-lint clippy
 clippy: 
         cargo clippy --all --all-targets --all-features
         
+[group('rust')]
+[no-exit-message]
+cargo-build package *args:
+        cargo build -p {{ package }} {{ args }}
+        
 [group('app')]
 app-release:
         cd {{ app-root }}; dx build --release
