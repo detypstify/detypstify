@@ -16,8 +16,8 @@ default:
 fmt: app-format paper-format
         nix fmt
 
-[doc('Run all formatters')]
-lint: app-lint scraper-lint
+[doc('Run all linters')]
+lint: app-lint
 
 [group('app')]
 app-release:
@@ -33,19 +33,7 @@ app-format:
 
 [group('app')]
 app-lint:
-        cd app && cargo clippy --target wasm32-unknown-unknown
-
-[group('scraper')]
-scraper-lint:
-        cargo clippy -p scraper
-
-[group('scraper')]
-scraper-run:
-        cargo run -p scraper
-
-[group('scraper')]
-scraper-build:
-        cargo build -p scraper
+        cd {{ app-root }}; cargo clippy --target wasm32-unknown-unknown
 
 [group('training')]
 train:
