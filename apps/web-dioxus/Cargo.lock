@@ -96,17 +96,13 @@ dependencies = [
  "burn-candle",
  "burn-import",
  "burn-wgpu",
- "comemo",
+ "compiler",
  "dioxus",
  "dioxus-logger",
  "image 0.25.1",
  "js-sys",
  "manganis",
  "tracing",
- "ttf-parser 0.21.1",
- "typst",
- "typst-assets",
- "typst-svg",
  "wasm-bindgen",
  "wasm-bindgen-futures",
  "web-sys",
@@ -1092,6 +1088,17 @@ dependencies = [
  "itoa",
  "ryu",
  "static_assertions",
+]
+
+[[package]]
+name = "compiler"
+version = "0.1.0"
+dependencies = [
+ "comemo",
+ "ttf-parser 0.21.1",
+ "typst",
+ "typst-assets",
+ "typst-svg",
 ]
 
 [[package]]

@@ -1,5 +1,5 @@
 [workspace]
-members = ["crates/dataset"] 
+members = ["crates/compiler","crates/dataset"] 
 resolver = "2"
 
 # NOTE: WASM-only targets don't play well with Cargo in workspaces as of now +breaks-tooling

@@ -1,8 +1,7 @@
 pub mod frontend;
 pub mod inference;
 pub mod model;
-pub mod typst;
-pub mod typst_execute;
+
 use dioxus::launch;
 use frontend::App;
 

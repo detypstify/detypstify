@@ -5,11 +5,10 @@ use std::io::Cursor;
 use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::Arc;
 use wasm_bindgen::prelude::*;
-use web_sys::{window, ContextAttributes2d, Navigator};
+use web_sys::{window, ContextAttributes2d, DomParser, Navigator, SupportedType, SvgsvgElement};
 
 use crate::inference::{inference, process_data, ImageClassifier, MLBackend};
 use crate::model::mnist::Model;
-use crate::typst_execute::mutate_svg;
 
 #[component]
 pub(crate) fn App() -> Element {
@@ -203,6 +202,47 @@ fn draw(event: MouseEvent, pos: Point) -> bool {
     } else {
         false
     }
+}
+
+fn mutate_svg(formula: &str, svg_id: &str) {
+    let resulting_svg = compiler::set_svg(formula);
+
+    let parser = DomParser::new().unwrap();
+    let svg_doc = parser
+        .parse_from_string(&resulting_svg, SupportedType::ImageSvgXml)
+        .unwrap();
+    let svg_doc_ele = svg_doc.document_element().unwrap();
+
+    tracing::error!("svg_doc: {:?}", svg_doc);
+    tracing::error!("svg_doc_ele: {:?}", svg_doc_ele);
+
+    let svg = svg_doc_ele.dyn_into::<SvgsvgElement>().unwrap();
+
+    let body = web_sys::window().unwrap().document().unwrap();
+    let container = body.get_element_by_id(svg_id).unwrap();
+    while let Some(child) = container.first_child() {
+        container
+            .remove_child(&child)
+            .expect("Failed to remove child");
+    }
+
+    container.append_child(&svg).unwrap();
+
+    let bbox = svg.get_b_box().unwrap();
+    svg.set_attribute(
+        "viewBox",
+        &format!(
+            "{} {} {} {}",
+            bbox.x(),
+            bbox.y(),
+            bbox.width(),
+            bbox.height()
+        ),
+    )
+    .unwrap();
+
+    svg.set_attribute("width", "100").unwrap();
+    svg.set_attribute("height", "100").unwrap();
 }
 
 fn set_output(name: &str, formula: &str) {

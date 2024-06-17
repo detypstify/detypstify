@@ -7,12 +7,18 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-
 dioxus = { git = "https://github.com/DioxusLabs/dioxus", branch = "main", features = ["web"] }
+image = "0.25.1"
+
+# HACK: Till we're able to get web-dioxus into the Cargo workspace
+compiler = { path = "../../crates/compiler" }
+
+# Inference
 burn = { git = "https://github.com/tracel-ai/burn.git", branch = "main", features = ["ndarray"], default-features=false }
 burn-wgpu = { git = "https://github.com/tracel-ai/burn.git", branch = "main", default-features = false}
 burn-candle = { git = "https://github.com/tracel-ai/burn.git", branch = "main", default-features = false}
-image = "0.25.1"
+
+# WASM
 js-sys = "0.3.69"
 wasm-bindgen = "0.2.92"
 wasm-bindgen-futures = "0.4.42"
@@ -21,14 +27,6 @@ wasm-bindgen-futures = "0.4.42"
 tracing = "0.1.40"
 dioxus-logger = "0.5.1"
 manganis = "0.2.2"
-
-# deps to compile typst to image to display
-# TODO we may want to hide these behind a feature flag eventually
-typst = "0.11.1"
-typst-svg = "0.11.1"
-ttf-parser = "0.21.1"
-comemo = "0.4.0"
-typst-assets = {version = "0.11.1", features = ["fonts"]}
 
 [build-dependencies]
 burn-import = { git = "https://github.com/tracel-ai/burn.git", branch = "main", default-features = false, features = ["onnx"] }
