@@ -1,4 +1,4 @@
 [workspace]
-members = ["scraper"] 
+members = ["scraper", "handwriting_training"]
 exclude = ["app"]  # "app" is a wasm-target, so for now it should be excluded
 resolver = "2"
