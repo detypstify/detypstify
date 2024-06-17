@@ -32,7 +32,7 @@ watch_path = ["src", "public"]
 # include `assets` in web platform
 [web.resource]
 
-style = ["./tailwind.css", "./main.css" ] # , "./tailwindcss7b3e5b8fafb8d3a6.css"]
+style = ["./tailwind.css", "./main.css", "./favicon.ico"] # , "./tailwindcss7b3e5b8fafb8d3a6.css"]
 
 # Javascript code file
 script = []
