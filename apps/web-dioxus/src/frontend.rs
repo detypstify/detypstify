@@ -6,6 +6,7 @@ use std::rc::Rc;
 use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::Arc;
 use wasm_bindgen::{prelude::*, Clamped};
+use wasm_bindgen_futures::spawn_local;
 use web_sys::{window, ContextAttributes2d, DomParser, Navigator, SupportedType, SvgsvgElement};
 
 use crate::inference::{
@@ -51,7 +52,7 @@ pub(crate) fn App() -> Element {
                 // let event_casted : &PlatformEventData = SuperInto::super_into(&evt);
                 let classifier_paste_ = classifier_paste.clone();
                 async move {
-                    handle_paste(evt, &classifier_paste_).await;
+                    handle_paste(evt, classifier_paste_).await;
                 }
             },
             div {
@@ -157,7 +158,7 @@ pub(crate) fn App() -> Element {
     }
 }
 
-async fn handle_paste(cb_event: ClipboardEvent, classifier: &ImageClassifier) {
+async fn handle_paste(cb_event: ClipboardEvent, classifier: ImageClassifier) {
     tracing::info!("handle_paste: running");
     let tmp = cb_event.data();
     tracing::info!("handle_paste: tmp: {:?}", tmp);
@@ -170,21 +171,37 @@ async fn handle_paste(cb_event: ClipboardEvent, classifier: &ImageClassifier) {
         if let Some(files) = data.files() {
             let file = files.get(0).unwrap();
             let reader = web_sys::FileReader::new().unwrap();
+            let reader_clone = reader.clone();
+            let onloadend_cb = Closure::wrap(Box::new(move || {
+                let reader_clone = reader_clone.clone();
+                let classifier_clone = classifier.clone();
+                spawn_local(async move {
+                    if let Ok(result) = reader_clone.result() {
+                        let array_buf = js_sys::Uint8Array::new(&result);
+                        let bytes = array_buf.to_vec();
+                        tracing::info!("Image pasted, size: {} bytes", bytes.len());
+                        let image = ImageReader::new(Cursor::new(&bytes))
+                            .with_guessed_format()
+                            .unwrap()
+                            .decode()
+                            .unwrap();
+                        let img = web_sys::ImageData::new_with_u8_clamped_array(
+                            Clamped(&bytes),
+                            image.width(),
+                        )
+                        .unwrap();
+                        let scaled_data = scale_image_data_to_28x28(&img).unwrap();
+                        let results =
+                            inference(&classifier_clone, &rgba_to_gray(&scaled_data)).await;
+                        set_output("out1", &results[0].to_string());
+                        set_output("out2", &results[1].to_string());
+                        set_output("out3", &results[2].to_string());
+                    }
+                });
+            }) as Box<dyn Fn()>);
+            reader.set_onloadend(Some(onloadend_cb.as_ref().unchecked_ref()));
             reader.read_as_array_buffer(&file).unwrap();
-            let raw_img = js_sys::Uint8Array::new(&reader.result().unwrap()).to_vec();
-            let image = ImageReader::new(Cursor::new(&raw_img))
-                .with_guessed_format()
-                .unwrap()
-                .decode()
-                .unwrap();
-            let img =
-                web_sys::ImageData::new_with_u8_clamped_array(Clamped(&raw_img), image.width())
-                    .unwrap();
-            let scaled_data = scale_image_data_to_28x28(&img).unwrap();
-            let results = inference(classifier, &rgba_to_gray(&scaled_data)).await;
-            set_output("out1", &results[0].to_string());
-            set_output("out2", &results[1].to_string());
-            set_output("out3", &results[2].to_string());
+            onloadend_cb.forget();
         }
     }
 }
