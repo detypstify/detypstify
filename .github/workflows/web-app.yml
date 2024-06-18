@@ -1,0 +1,52 @@
+name: Dioxus Web App
+
+on:
+  pull_request:
+    branches:
+      - '**'
+    paths:
+      - 'apps/web-dioxus/**'
+  push:
+    branches:
+      - main
+    paths:
+      - 'apps/web-dioxus/**'
+
+jobs:
+  build-web-app:
+    name: Build Dioxus Web App
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: DeterminateSystems/nix-installer-action@main
+      - uses: DeterminateSystems/magic-nix-cache-action@main
+      - run: |
+          nix develop -c just app-release
+
+      - if: github.event_name == 'push'
+        name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: dist
+          path: ./apps/web-dioxus/dist
+
+  deploy-web-app:
+    if: github.event_name == 'push' 
+    needs: build-web-app
+    name: Deploy Dioxus Web App
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: "write"
+      contents: "write"
+    steps:
+      - name: Download artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: dist
+
+      - uses: crazy-max/ghaction-github-pages@v4
+        with:
+          target_branch: gh-pages
+          build_dir: ./dist
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
