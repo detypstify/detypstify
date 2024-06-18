@@ -19,7 +19,7 @@ hot_reload = true
 
 # HTML title tag content
 title = "Detypstify"
-base_path = "detypstify/"
+# base_path = "detypstify/"
 
 [web.watcher]
 

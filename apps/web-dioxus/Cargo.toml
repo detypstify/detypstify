@@ -36,6 +36,7 @@ version = "0.3.69"
 features = [
   'CanvasRenderingContext2d',
   'Document',
+  'DataTransfer',
   'Element',
   'HtmlCanvasElement',
   'Window',

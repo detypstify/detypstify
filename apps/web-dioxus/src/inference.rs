@@ -1,3 +1,5 @@
+use std::rc::Rc;
+
 use crate::model::mnist::Model;
 use burn::tensor::backend::Backend;
 use burn_wgpu::{AutoGraphicsApi, Wgpu};
@@ -10,9 +12,9 @@ use burn_candle::Candle;
 
 #[derive(Clone)]
 pub enum MLBackend {
-    Candle(Box<Model<Candle<f32, i64>>>),
-    NdArray(Box<Model<NdArray<f32>>>),
-    Wgpu(Box<Model<Wgpu<AutoGraphicsApi, f32, i32>>>),
+    Candle(Rc<Model<Candle<f32, i64>>>),
+    NdArray(Rc<Model<NdArray<f32>>>),
+    Wgpu(Rc<Model<Wgpu<AutoGraphicsApi, f32, i32>>>),
 }
 
 #[derive(Clone)]
@@ -74,7 +76,7 @@ pub fn process_data(ctx: &CanvasRenderingContext2d) -> Option<Vec<f32>> {
     }
 }
 
-fn find_bounds(image_data: &ImageData) -> Option<(usize, usize, usize, usize)> {
+pub fn find_bounds(image_data: &ImageData) -> Option<(usize, usize, usize, usize)> {
     let data = image_data.data();
     let width = image_data.width() as usize;
     let height = image_data.height() as usize;
@@ -112,7 +114,7 @@ fn find_bounds(image_data: &ImageData) -> Option<(usize, usize, usize, usize)> {
     }
 }
 
-fn scale_image_data_to_28x28(image_data: &ImageData) -> Result<ImageData, JsValue> {
+pub fn scale_image_data_to_28x28(image_data: &ImageData) -> Result<ImageData, JsValue> {
     let src_width = image_data.width() as usize;
     let src_height = image_data.height() as usize;
     let target_width = 28;
@@ -145,7 +147,7 @@ fn scale_image_data_to_28x28(image_data: &ImageData) -> Result<ImageData, JsValu
     )
 }
 
-fn rgba_to_gray(image_data: &ImageData) -> Vec<f32> {
+pub fn rgba_to_gray(image_data: &ImageData) -> Vec<f32> {
     let data = image_data.data();
     let mut gray_data = Vec::new();
 

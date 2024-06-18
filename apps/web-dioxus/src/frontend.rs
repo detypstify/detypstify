@@ -2,12 +2,15 @@ use dioxus::html::input_data::MouseButton;
 use dioxus::prelude::*;
 use image::io::Reader as ImageReader;
 use std::io::Cursor;
+use std::rc::Rc;
 use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::Arc;
-use wasm_bindgen::prelude::*;
+use wasm_bindgen::{prelude::*, Clamped};
 use web_sys::{window, ContextAttributes2d, DomParser, Navigator, SupportedType, SvgsvgElement};
 
-use crate::inference::{inference, process_data, ImageClassifier, MLBackend};
+use crate::inference::{
+    inference, process_data, rgba_to_gray, scale_image_data_to_28x28, ImageClassifier, MLBackend,
+};
 use crate::model::mnist::Model;
 
 #[component]
@@ -21,18 +24,21 @@ pub(crate) fn App() -> Element {
     let adapter_promise = JsValue::from(Navigator::gpu(&navigator));
     let has_wgpu = !adapter_promise.is_undefined();
     let classifier = if has_wgpu {
-        tracing::error!("WGPU");
+        tracing::info!("WGPU");
         let device = Default::default();
         ImageClassifier {
-            model: MLBackend::Candle(Box::new(Model::new(&device))),
+            model: MLBackend::Candle(Rc::new(Model::new(&device))),
         }
     } else {
-        tracing::error!("Falling back to CPU");
+        tracing::info!("Falling back to CPU");
         let device = Default::default();
         ImageClassifier {
-            model: MLBackend::NdArray(Box::new(Model::new(&device))),
+            model: MLBackend::NdArray(Rc::new(Model::new(&device))),
         }
     };
+
+    let classifier_up = classifier.clone();
+    let classifier_paste = classifier.clone();
 
     rsx! {
         link { rel: "stylesheet", href: "main.css" }
@@ -41,6 +47,13 @@ pub(crate) fn App() -> Element {
             href: "https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css"
         }
         section { class: "container max-w-fit",
+            onpaste: move |evt: Event<ClipboardData>| {
+                // let event_casted : &PlatformEventData = SuperInto::super_into(&evt);
+                let classifier_paste_ = classifier_paste.clone();
+                async move {
+                    handle_paste(evt, &classifier_paste_).await;
+                }
+            },
             div {
                 id: "header",
                 class: "flex flex-row sticky items-center justify-center z-10",
@@ -71,45 +84,19 @@ pub(crate) fn App() -> Element {
                         set_position(evt, pos_enter.clone());
                     },
                     onmouseup: move |_| {
-                        set_output("out1", "1. 0");
-                    },
-                    onmousemove: move |event| {
-                        let classifier_ = classifier.clone();
-                        let pos_move_ = pos_move.clone();
+                        let classifier_up_ = classifier_up.clone();
                         async move {
-                            let need_reprocess = draw(event, pos_move_);
-                            let canvas = web_sys::window()
-                                .unwrap()
-                                .document()
-                                .unwrap()
-                                .get_element_by_id("canvas")
-                                .unwrap();
-                            let mut options = ContextAttributes2d::new();
-                            options.will_read_frequently(true);
-                            let context = canvas
-                                .dyn_into::<web_sys::HtmlCanvasElement>()
-                                .unwrap()
-                                .get_context_with_context_options("2d", &options)
-                                .unwrap()
-                                .unwrap()
-                                .dyn_into::<web_sys::CanvasRenderingContext2d>()
-                                .unwrap();
-                            if need_reprocess {
-                                if let Some(processed_data) = process_data(&context) {
-                                    let results = inference(&classifier_, processed_data.as_slice())
-                                        .await;
-                                    set_output("out1", &results[0].to_string());
-                                    set_output("out2", &results[1].to_string());
-                                    set_output("out3", &results[2].to_string());
-                                }
-                            }
+                            run_inference(&classifier_up_).await;
                         }
+                    },
+                    onmousemove: move |evt| {
+                        let pos_move_ = pos_move.clone();
+                        let _ = draw(evt, pos_move_);
                     }
                 }
             }
             div { class: "flex align-middle justify-center mb-4",
                 div {
-                    // make the class be dark and matching with the theme
                     class: "button-like",
                     tabindex: "0",
                     id: "btn",
@@ -163,10 +150,67 @@ pub(crate) fn App() -> Element {
                     }
                 }
             }
-            OutputModel { name: "out1", num: "1.", formula: "1." }
-            OutputModel { name: "out2", num: "2.", formula: "2." }
-            OutputModel { name: "out3", num: "3.", formula: "3." }
+            OutputModel { name: "out1", num: "1.", formula: "" }
+            OutputModel { name: "out2", num: "2.", formula: "" }
+            OutputModel { name: "out3", num: "3.", formula: "" }
         }
+    }
+}
+
+async fn handle_paste(cb_event: ClipboardEvent, classifier: &ImageClassifier) {
+    tracing::info!("handle_paste: running");
+    let tmp = cb_event.data();
+    tracing::info!("handle_paste: tmp: {:?}", tmp);
+    if let Some(event) = tmp.downcast::<web_sys::Event>() {
+        tracing::info!("handle_paste: event: {:?}", event);
+        let clipboard_data: web_sys::ClipboardEvent =
+            event.clone().dyn_into::<web_sys::ClipboardEvent>().unwrap();
+        let data = clipboard_data.clipboard_data().unwrap();
+
+        if let Some(files) = data.files() {
+            let file = files.get(0).unwrap();
+            let reader = web_sys::FileReader::new().unwrap();
+            reader.read_as_array_buffer(&file).unwrap();
+            let raw_img = js_sys::Uint8Array::new(&reader.result().unwrap()).to_vec();
+            let image = ImageReader::new(Cursor::new(&raw_img))
+                .with_guessed_format()
+                .unwrap()
+                .decode()
+                .unwrap();
+            let img =
+                web_sys::ImageData::new_with_u8_clamped_array(Clamped(&raw_img), image.width())
+                    .unwrap();
+            let scaled_data = scale_image_data_to_28x28(&img).unwrap();
+            let results = inference(classifier, &rgba_to_gray(&scaled_data)).await;
+            set_output("out1", &results[0].to_string());
+            set_output("out2", &results[1].to_string());
+            set_output("out3", &results[2].to_string());
+        }
+    }
+}
+
+async fn run_inference(classifier: &ImageClassifier) {
+    let canvas = web_sys::window()
+        .unwrap()
+        .document()
+        .unwrap()
+        .get_element_by_id("canvas")
+        .unwrap();
+    let mut options = ContextAttributes2d::new();
+    options.will_read_frequently(true);
+    let context = canvas
+        .dyn_into::<web_sys::HtmlCanvasElement>()
+        .unwrap()
+        .get_context_with_context_options("2d", &options)
+        .unwrap()
+        .unwrap()
+        .dyn_into::<web_sys::CanvasRenderingContext2d>()
+        .unwrap();
+    if let Some(processed_data) = process_data(&context) {
+        let results = inference(classifier, processed_data.as_slice()).await;
+        set_output("out1", &results[0].to_string());
+        set_output("out2", &results[1].to_string());
+        set_output("out3", &results[2].to_string());
     }
 }
 
@@ -213,8 +257,8 @@ fn mutate_svg(formula: &str, svg_id: &str) {
         .unwrap();
     let svg_doc_ele = svg_doc.document_element().unwrap();
 
-    tracing::error!("svg_doc: {:?}", svg_doc);
-    tracing::error!("svg_doc_ele: {:?}", svg_doc_ele);
+    tracing::info!("svg_doc: {:?}", svg_doc);
+    tracing::info!("svg_doc_ele: {:?}", svg_doc_ele);
 
     let svg = svg_doc_ele.dyn_into::<SvgsvgElement>().unwrap();
 
