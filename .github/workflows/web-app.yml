@@ -27,8 +27,9 @@ jobs:
         name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: dist
+          name: web-app-dist
           path: ./apps/web-dioxus/dist
+          overwrite: true
 
   deploy-web-app:
     if: github.event_name == 'push' 
@@ -42,7 +43,7 @@ jobs:
       - name: Download artifact
         uses: actions/download-artifact@v4
         with:
-          name: dist
+          name: web-app-dist
 
       - uses: crazy-max/ghaction-github-pages@v4
         with:
