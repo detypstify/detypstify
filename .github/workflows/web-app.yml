@@ -5,11 +5,19 @@ on:
     branches:
       - '**'
     paths:
+      - 'flake.nix'
+      - 'flake.lock'
+      - 'rust.flakeModule.nix'
+      - 'Justfile'
       - 'apps/web-dioxus/**'
   push:
     branches:
       - main
     paths:
+      - 'flake.nix'
+      - 'flake.lock'
+      - 'rust.flakeModule.nix'
+      - 'Justfile'
       - 'apps/web-dioxus/**'
 
 jobs:
