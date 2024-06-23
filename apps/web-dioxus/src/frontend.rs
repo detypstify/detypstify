@@ -159,11 +159,11 @@ pub(crate) fn App() -> Element {
 }
 
 async fn handle_paste(cb_event: ClipboardEvent, classifier: ImageClassifier) {
-    tracing::info!("handle_paste: running");
+    // tracing::info!("handle_paste: running");
     let tmp = cb_event.data();
-    tracing::info!("handle_paste: tmp: {:?}", tmp);
+    // tracing::info!("handle_paste: tmp: {:?}", tmp);
     if let Some(event) = tmp.downcast::<web_sys::Event>() {
-        tracing::info!("handle_paste: event: {:?}", event);
+        // tracing::info!("handle_paste: event: {:?}", event);
         let clipboard_data: web_sys::ClipboardEvent =
             event.clone().dyn_into::<web_sys::ClipboardEvent>().unwrap();
         let data = clipboard_data.clipboard_data().unwrap();
@@ -180,17 +180,20 @@ async fn handle_paste(cb_event: ClipboardEvent, classifier: ImageClassifier) {
                         let array_buf = js_sys::Uint8Array::new(&result);
                         let bytes = array_buf.to_vec();
                         tracing::info!("Image pasted, size: {} bytes", bytes.len());
+                        tracing::info!("Result type: {:?}", result);
+                        tracing::info!("Buffer length: {}", array_buf.length());
                         let image = ImageReader::new(Cursor::new(&bytes))
                             .with_guessed_format()
                             .unwrap()
                             .decode()
                             .unwrap();
+                        tracing::info!("Bytes from the reader: {:?}", image.as_bytes());
                         let img = web_sys::ImageData::new_with_u8_clamped_array(
-                            Clamped(&bytes),
+                            Clamped(image.as_bytes()),
                             image.width(),
                         )
                         .unwrap();
-                        let scaled_data = scale_image_data_to_28x28(&img).unwrap();
+                        let scaled_data = scale_image_data_to_28x28(img).unwrap();
                         let results =
                             inference(&classifier_clone, &rgba_to_gray(&scaled_data)).await;
                         set_output("out1", &results[0].to_string());

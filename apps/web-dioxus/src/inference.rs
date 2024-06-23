@@ -68,7 +68,7 @@ pub fn process_data(ctx: &CanvasRenderingContext2d) -> Option<Vec<f32>> {
             )
             .unwrap();
 
-        let scaled_data = scale_image_data_to_28x28(&cropped_data).unwrap();
+        let scaled_data = scale_image_data_to_28x28(cropped_data).unwrap();
 
         Some(rgba_to_gray(&scaled_data))
     } else {
@@ -114,7 +114,7 @@ pub fn find_bounds(image_data: &ImageData) -> Option<(usize, usize, usize, usize
     }
 }
 
-pub fn scale_image_data_to_28x28(image_data: &ImageData) -> Result<ImageData, JsValue> {
+pub fn scale_image_data_to_28x28(image_data: ImageData) -> Result<ImageData, JsValue> {
     let src_width = image_data.width() as usize;
     let src_height = image_data.height() as usize;
     let target_width = 28;
